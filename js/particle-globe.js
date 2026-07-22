@@ -9,6 +9,18 @@
   if (!stage || typeof THREE === 'undefined' || typeof d3 === 'undefined' || typeof topojson === 'undefined') return;
 
   var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // Reset scroll to the top IMMEDIATELY, synchronously, before the world-map fetch
+  // below even starts — that fetch can take anywhere from milliseconds to several
+  // seconds, and this used to run only inside its .then() callback. A user who
+  // started scrolling right away (a completely normal, deliberate scroll) could get
+  // several sections deep before the fetch resolved, at which point this call fired
+  // late and yanked scrollY back to 0 out from under them — precisely the "jump back
+  // to the top mid-scroll" bug. Doing it here, before any async work, means it can
+  // only ever run at the very start of the page visit, never mid-interaction.
+  if (!reduceMotion){
+    if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+    window.scrollTo(0, 0);
+  }
   var R = 2.0;
   var GRID_STEP = 1.1;
   var SPHERE_Y_HOME1 = -2.8;    // hero: pushed down so it emerges from the bottom
@@ -204,11 +216,6 @@
 
       function lockScroll(){ document.documentElement.style.overflow = 'hidden'; document.body.style.overflow = 'hidden'; }
       function unlockScroll(){ document.documentElement.style.overflow = ''; document.body.style.overflow = ''; }
-
-      if (!reduceMotion){
-        if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
-        window.scrollTo(0, 0);
-      }
 
       function armGate(){
         if (gate !== 'pre') return;
