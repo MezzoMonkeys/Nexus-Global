@@ -15,6 +15,37 @@
   setNavHeight();
   window.addEventListener('resize', setNavHeight);
 
+  // Pinned-panel offsets: a .stack section taller than one viewport shouldn't
+  // freeze the moment it reaches the top (that would hide everything past the
+  // first screenful) or need an internal/nested scroll region to reveal the
+  // rest (that's a second, competing scroll stream). Instead, delay its sticky
+  // lock with a negative top offset sized to its own real height, so it keeps
+  // scrolling normally — full height, single scroll stream — until its own
+  // last screenful has come into view, and only that final frame holds while
+  // the next section covers it. Sections that already fit in one viewport get
+  // 0 (unchanged, locks immediately as before).
+  // #stats and #cover are excluded: both sit inside particle-globe.js's custom
+  // scroll-gate sequence, which depends on their exact sticky position staying
+  // stable and predictable throughout. This function re-measures on 'load',
+  // which can fire after a web-font swap shifts a section's rendered height by
+  // a pixel or two — if that recalculation lands while #cover is actively
+  // stuck mid-transition into #stats, its offset would change out from under
+  // it and read as a jump. Neither section needs an offset anyway (both are
+  // designed to fit one viewport), so excluding them costs nothing.
+  var stackEls = document.querySelectorAll('.stack:not(#stats):not(#cover)');
+  var updateStackOffsets = function(){
+    var vh = window.innerHeight || 800;
+    stackEls.forEach(function(el){
+      var h = el.getBoundingClientRect().height;
+      el.style.setProperty('--pin-top', (h > vh ? -(h - vh) : 0) + 'px');
+    });
+  };
+  if (stackEls.length) {
+    updateStackOffsets();
+    window.addEventListener('load', updateStackOffsets);
+    window.addEventListener('resize', updateStackOffsets);
+  }
+
   // Mobile menu
   if (menuBtn && navMenu) {
     menuBtn.addEventListener('click', function(){
@@ -180,6 +211,8 @@
     var hR = heroAu.querySelector('.kinetic-line--r');
     var hRest = heroAu.querySelectorAll('.hero-au__eyebrow, .hero-au__sub');
     hRest.forEach(function(el){ el.style.transition = 'none'; });   // instant, 1:1 with scroll, no chase/lag
+    var hGlow = heroAu.querySelector('.hero-au__glow');
+    if (hGlow) hGlow.style.transition = 'none';
     if (hL && hR && !reduceMotion) {
       var hTicking = false;
       var updateHero = function(){
@@ -195,6 +228,13 @@
         hRest.forEach(function(el){
           el.style.transform = 'translateY(' + exitY.toFixed(1) + 'px)';
         });
+        // The ambient glow was positioned to sit under the globe in its hero
+        // (bottom-anchored) position, but it's a static CSS gradient, not tied
+        // to the globe's own scroll-scrubbed reposition — left alone it stays
+        // put while the globe moves away, then vanishes abruptly once #cover
+        // scrolls out. Fade it out over the same scroll range instead, so it
+        // reads as leaving deliberately alongside the rest of the hero.
+        if (hGlow) hGlow.style.opacity = Math.max(1 - p * 1.4, 0);
         hTicking = false;
       };
       window.addEventListener('scroll', function(){ if(!hTicking){ requestAnimationFrame(updateHero); hTicking = true; } }, { passive: true });

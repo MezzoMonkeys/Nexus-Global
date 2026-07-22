@@ -233,12 +233,20 @@
 
       if (!reduceMotion){
         // Phase 1: let the page scroll natively from the hero into the second panel;
-        // once its top has reached the top of the viewport, snap to it exactly and arm.
+        // once its top has reached the top of the viewport, arm — at WHATEVER scrollY
+        // that happens to be, no forced snap. #stats holds its own stuck/visible phase
+        // for roughly a further viewport-height beyond this point (its own height),
+        // so a scroll gesture landing a little past the boundary is still safely
+        // within that window; forcing scrollY back to an exact value here previously
+        // showed up as a visible downward jump whenever a gesture overshot it.
         window.addEventListener('scroll', function(){
           if (gate !== 'pre') return;
+          computeReleaseY();   // keep the boundary in sync with the live DOM on every
+                                // tick, not just at load/resize/fonts-ready — if anything
+                                // else nudges #stats' position mid-scroll, the threshold
+                                // never goes stale against it.
           var y = window.pageYOffset || 0;
           if (y >= releaseY - 2){
-            window.scrollTo({ top: releaseY, left: 0, behavior: 'instant' });
             armGate();
           }
         }, { passive: true });

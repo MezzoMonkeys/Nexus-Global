@@ -32,7 +32,7 @@
   --font-label:'Archivo',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 }
 *,*::before,*::after{box-sizing:border-box}
-html{scroll-behavior:smooth}
+html{scroll-behavior:smooth;scrollbar-gutter:stable}
 html,body{overflow-x:hidden;overflow-x:clip}
 body{margin:0;font-family:var(--font-body);font-size:16px;color:var(--ink);background:var(--platinum);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;line-height:1.5}
 img,svg{max-width:100%;display:block}
@@ -120,6 +120,12 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
 .reveal-d3{transition-delay:.16s}
 .reveal-d4{transition-delay:.24s}
 .reveal-d5{transition-delay:.32s}
+/* #stats sits inside the custom scroll-gated hero sequence, where any extra
+   motion is one more variable in an already-delicate transition — its content
+   just fades in place (no 24px slide-up) rather than sharing the site-wide
+   reveal transform. */
+#stats .reveal{transform:none}
+#stats .reveal.in{transform:none}
 
 .line-reveal{display:block;overflow:hidden}
 .line-reveal>span{display:inline-block;transform:translateY(115%);transition:transform .8s var(--ease)}
@@ -188,13 +194,17 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
    last section on the page. On the homepage this only changes the #cover section
    wrapper's CSS position, the globe's own canvas/JS is untouched and keeps rendering
    on its separate fixed full-viewport stage regardless of #cover's positioning.
-   Capped to exactly one viewport height (not min-height, which would just grow the
-   box and freeze content whenever it's taller than the screen): if a section's own
-   content is taller than the viewport, it scrolls internally first, underneath the
-   fixed nav, so every line reaches view before the section holds still and the next
-   one slides up over it — content never gets silently cut off while pinned. */
-.stack{position:sticky;top:0}
-.stack:not(.page--tight){height:100vh;overflow-y:auto}
+   One continuous scroll stream, no nested/internal scrolling, and no compact-content
+   requirement: --pin-top defaults to 0 (a section that fits in one viewport behaves
+   exactly as before, locking the instant it reaches the top). For a section taller
+   than the viewport, js/main.js measures its real height and sets --pin-top to a
+   NEGATIVE offset equal to -(height - 100vh). That delays the sticky lock: instead of
+   grabbing the section the moment its top reaches the viewport (which would freeze
+   the first screenful and hide everything below it), the section keeps scrolling
+   normally — full height, no cap, ordinary single-stream scroll — right up until its
+   own last screenful has scrolled into view, and only THEN does it hold, with the
+   next section sliding up over that held frame exactly as before. */
+.stack{position:sticky;top:var(--pin-top,0)}
 #cover.stack{z-index:1}
 
 /* Home */
@@ -270,8 +280,15 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
 /* Compact card variant: for panels where a locked/pinned scroll means overflow
    content becomes unreachable, so everything must fit within one viewport. */
 .card--compact{padding:20px 22px;gap:8px}
+.card--compact .card__icon{width:22px;height:22px}
 .card--compact h3{font-size:16px}
 .card--compact p{font-size:13px;line-height:1.5}
+@media(max-height:760px){
+  .card--compact{padding:14px 18px;gap:4px}
+  .card--compact .card__icon{width:18px;height:18px}
+  .card--compact h3{font-size:14px}
+  .card--compact p{font-size:11.5px;line-height:1.4}
+}
 
 /* #stats sits inside the scroll-gated hero sequence: while gated, vertical page
    scroll is locked, so its content must reliably fit within one viewport — cards
