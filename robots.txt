@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /ASSETS/
+
+Sitemap: https://www.nexusglobal.com/sitemap.xml

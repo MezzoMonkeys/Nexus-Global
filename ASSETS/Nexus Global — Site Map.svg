@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_1" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 720 788.8">
+  <!-- Generator: Adobe Illustrator 30.3.0, SVG Export Plug-In . SVG Version: 2.1.3 Build 182)  -->
+  <defs>
+    <style>
+      .st0, .st1, .st2, .st3, .st4, .st5, .st6, .st7, .st8, .st9, .st10, .st11, .st12 {
+        isolation: isolate;
+      }
+
+      .st0, .st2, .st3, .st4, .st5, .st8, .st10, .st12 {
+        font-family: 'Lato', Helvetica, sans-serif;
+      }
+
+      .st0, .st3, .st4, .st5, .st12 {
+        font-size: 9px;
+      }
+
+      .st0, .st7, .st9 {
+        fill: #ededed;
+      }
+
+      .st1, .st2, .st6, .st8, .st10, .st11 {
+        font-size: 10px;
+      }
+
+      .st1, .st6, .st7, .st9, .st11 {
+        font-family: 'Lato', Helvetica, sans-serif;
+        font-weight: 700;
+      }
+
+      .st1, .st14 {
+        fill: #000f17;
+      }
+
+      .st2, .st12, .st15 {
+        fill: #00c9b1;
+      }
+
+      .st3, .st8 {
+        fill: #ededed;
+      }
+
+      .st16 {
+        stroke: #2e3192;
+        stroke-width: 1.5px;
+      }
+
+      .st16, .st17, .st18, .st19, .st20 {
+        fill: none;
+      }
+
+      .st4 {
+        fill: #000f17;
+      }
+
+      .st5, .st6 {
+        fill: #6b7a8a;
+      }
+
+      .st18 {
+        stroke: #d0d0d0;
+      }
+
+      .st18, .st19 {
+        stroke-width: .8px;
+      }
+
+      .st6 {
+        letter-spacing: 0em;
+      }
+
+      .st7 {
+        font-size: 11px;
+      }
+
+      .st21, .st11 {
+        fill: #2e3192;
+      }
+
+      .st9 {
+        font-size: 12px;
+      }
+
+      .st13 {
+        fill: #ffffff;
+        stroke: #c0c0c0;
+        stroke-width: .5px;
+      }
+
+      .st10 {
+        fill: #6b7a8a;
+      }
+
+      .st19, .st20 {
+        stroke: #000f17;
+        stroke-dasharray: 3 2;
+      }
+    </style>
+  </defs>
+  <rect width="720" height="788.8" fill="#ededed"/>
+  <path class="st17" d=""/>
+  <path class="st17" d=""/>
+  <path class="st17" d=""/>
+  <path class="st17" d=""/>
+  <g>
+    <rect class="st14" x="161.7" y="48.6" width="10" height="10" rx="2" ry="2"/>
+    <text class="st10" transform="translate(177.7 58.6)"><tspan x="0" y="0">Primary page</tspan></text>
+    <rect class="st21" x="255.7" y="48.6" width="10" height="10" rx="2" ry="2"/>
+    <text class="st10" transform="translate(271.7 58.6)"><tspan x="0" y="0">Page section</tspan></text>
+    <rect class="st13" x="355.7" y="48.6" width="10" height="10" rx="2" ry="2"/>
+    <text class="st10" transform="translate(371.7 58.6)"><tspan x="0" y="0">Utility / system</tspan></text>
+    <rect class="st15" x="475.7" y="48.6" width="10" height="10" rx="2" ry="2"/>
+    <text class="st10" transform="translate(491.7 58.6)"><tspan x="0" y="0">CMS collection</tspan></text>
+  </g>
+  <rect class="st14" x="270" y="82.6" width="180" height="44" rx="4" ry="4"/>
+  <text class="st9" transform="translate(343.3 99.6)"><tspan x="0" y="0">Home</tspan></text>
+  <text class="st2" transform="translate(358.6 116.6)"><tspan x="0" y="0">/</tspan></text>
+  <line class="st16" x1="360" y1="126.6" x2="360" y2="150.6"/>
+  <path class="st16" d="M68.1,169.3s0-16.1,0-18.7h584.4c0,2.6,0,18.7,0,18.7"/>
+  <line class="st20" x1="360" y1="126.6" x2="360" y2="184.6"/>
+  <rect class="st21" x="280" y="184.6" width="160" height="26" rx="3" ry="3"/>
+  <line class="st16" x1="360" y1="126.6" x2="360" y2="238.1"/>
+  <line class="st16" x1="196.1" y1="150.2" x2="196.1" y2="169.3"/>
+  <line class="st16" x1="524.1" y1="150.2" x2="524.1" y2="169.3"/>
+  <text class="st8" transform="translate(285.1 201.6)"><tspan x="0" y="0">Hero · Capabilities · Partners CTA</tspan></text>
+  <path class="st21" d="M72.5,167.1h-9l4.5,9,4.5-9Z"/>
+  <path class="st21" d="M68,180.6" marker-end="url(#arr)"/>
+  <rect class="st14" x="16" y="180.6" width="104" height="40" rx="4" ry="4"/>
+  <text class="st7" transform="translate(52.1 195.6)"><tspan x="0" y="0">About</tspan></text>
+  <text class="st12" transform="translate(55.5 210.6)"><tspan x="0" y="0">/about</tspan></text>
+  <line class="st19" x1="68" y1="220.6" x2="68" y2="238.6"/>
+  <rect class="st21" x="16" y="238.6" width="104" height="22" rx="3" ry="3"/>
+  <text class="st3" transform="translate(37.7 253.6)"><tspan x="0" y="0">Company story</tspan></text>
+  <line class="st19" x1="68" y1="260.6" x2="68" y2="274.6"/>
+  <rect class="st21" x="16" y="274.6" width="104" height="22" rx="3" ry="3"/>
+  <text class="st3" transform="translate(54.6 289.6)"><tspan x="0" y="0">Values</tspan></text>
+  <line class="st19" x1="68" y1="296.6" x2="68" y2="310.6"/>
+  <rect class="st21" x="16" y="310.6" width="104" height="22" rx="3" ry="3"/>
+  <text class="st3" transform="translate(37.5 325.6)"><tspan x="0" y="0">Team snapshot</tspan></text>
+  <line class="st19" x1="68" y1="332.6" x2="68" y2="346.6"/>
+  <rect class="st21" x="16" y="346.6" width="104" height="22" rx="3" ry="3"/>
+  <text class="st3" transform="translate(27.5 361.6)"><tspan x="0" y="0">Lincor parent callout</tspan></text>
+  <path class="st21" d="M200.5,167.1h-9l4.5,9,4.5-9Z"/>
+  <path class="st21" d="M196,180.6" marker-end="url(#arr)"/>
+  <rect class="st14" x="144" y="180.6" width="104" height="40" rx="4" ry="4"/>
+  <text class="st7" transform="translate(173.4 195.6)"><tspan x="0" y="0">Services</tspan></text>
+  <text class="st12" transform="translate(178.2 210.6)"><tspan x="0" y="0">/services</tspan></text>
+  <line class="st19" x1="196" y1="220.6" x2="196" y2="238.6"/>
+  <rect class="st21" x="144" y="238.6" width="104" height="22" rx="3" ry="3"/>
+  <text class="st3" transform="translate(164.7 253.6)"><tspan x="0" y="0">Global sourcing</tspan></text>
+  <line class="st19" x1="196" y1="260.6" x2="196" y2="274.6"/>
+  <rect class="st21" x="144" y="274.6" width="104" height="22" rx="3" ry="3"/>
+  <text class="st3" transform="translate(167.2 289.6)"><tspan x="0" y="0">Quality control</tspan></text>
+  <line class="st19" x1="196" y1="296.6" x2="196" y2="310.6"/>
+  <rect class="st21" x="144" y="310.6" width="104" height="22" rx="3" ry="3"/>
+  <text class="st3" transform="translate(160.5 325.6)"><tspan x="0" y="0">Logistics &amp; freight</tspan></text>
+  <line class="st19" x1="196" y1="332.6" x2="196" y2="346.6"/>
+  <rect class="st21" x="144" y="346.6" width="104" height="22" rx="3" ry="3"/>
+  <text class="st3" transform="translate(171.2 361.6)"><tspan x="0" y="0">Private label</tspan></text>
+  <line class="st19" x1="196" y1="368.6" x2="196" y2="382.6"/>
+  <rect class="st21" x="144" y="382.6" width="104" height="22" rx="3" ry="3"/>
+  <text class="st3" transform="translate(161 397.6)"><tspan x="0" y="0">Brand distribution</tspan></text>
+  <path class="st21" d="M528.5,167.1h-9l4.5,9,4.5-9Z"/>
+  <path class="st21" d="M524,180.6" marker-end="url(#arr)"/>
+  <rect class="st14" x="472" y="180.6" width="104" height="40" rx="4" ry="4"/>
+  <text class="st7" transform="translate(501.7 195.6)"><tspan x="0" y="0">Partners</tspan></text>
+  <text class="st12" transform="translate(506.2 210.6)"><tspan x="0" y="0">/partners</tspan></text>
+  <line class="st19" x1="524" y1="220.6" x2="524" y2="238.6"/>
+  <rect class="st21" x="472" y="238.6" width="104" height="22" rx="3" ry="3"/>
+  <text class="st3" transform="translate(486 253.6)"><tspan x="0" y="0">Retail partners grid</tspan></text>
+  <line class="st19" x1="524" y1="260.6" x2="524" y2="274.6"/>
+  <rect class="st21" x="472" y="274.6" width="104" height="22" rx="3" ry="3"/>
+  <text class="st3" transform="translate(485.5 289.6)"><tspan x="0" y="0">Brand partners grid</tspan></text>
+  <line class="st19" x1="524" y1="296.6" x2="524" y2="310.6"/>
+  <rect class="st21" x="472" y="310.6" width="104" height="22" rx="3" ry="3"/>
+  <text class="st3" transform="translate(483 325.6)"><tspan x="0" y="0">Partnership spotlight</tspan></text>
+  <path class="st21" d="M656.5,167.1h-9l4.5,9,4.5-9Z"/>
+  <path class="st21" d="M652,180.6" marker-end="url(#arr)"/>
+  <rect class="st14" x="600" y="180.6" width="104" height="40" rx="4" ry="4"/>
+  <text class="st7" transform="translate(631.2 195.6)"><tspan x="0" y="0">Markets</tspan></text>
+  <text class="st12" transform="translate(634.7 210.6)"><tspan x="0" y="0">/markets</tspan></text>
+  <line class="st19" x1="652" y1="220.6" x2="652" y2="238.6"/>
+  <rect class="st21" x="600" y="238.6" width="104" height="22" rx="3" ry="3"/>
+  <text class="st3" transform="translate(637.7 253.6)"><tspan x="0" y="0">HK HQ</tspan></text>
+  <line class="st19" x1="652" y1="260.6" x2="652" y2="274.6"/>
+  <rect class="st21" x="600" y="274.6" width="104" height="22" rx="3" ry="3"/>
+  <text class="st3" transform="translate(627.7 289.6)"><tspan x="0" y="0">South Africa</tspan></text>
+  <line class="st19" x1="652" y1="296.6" x2="652" y2="310.6"/>
+  <rect class="st21" x="600" y="310.6" width="104" height="22" rx="3" ry="3"/>
+  <text class="st3" transform="translate(622.7 325.6)"><tspan x="0" y="0">Africa (growth)</tspan></text>
+  <line class="st19" x1="652" y1="332.6" x2="652" y2="346.6"/>
+  <rect class="st21" x="600" y="346.6" width="104" height="22" rx="3" ry="3"/>
+  <text class="st3" transform="translate(615.5 361.6)"><tspan x="0" y="0">Categories served</tspan></text>
+  <rect class="st14" x="308" y="236.4" width="104" height="40" rx="4" ry="4"/>
+  <text class="st7" transform="translate(339.5 251.4)"><tspan x="0" y="0">Contact</tspan></text>
+  <text class="st12" transform="translate(344.2 266.4)"><tspan x="0" y="0">/contact</tspan></text>
+  <line class="st19" x1="360" y1="276.4" x2="360" y2="294.4"/>
+  <rect class="st21" x="308" y="294.4" width="104" height="22" rx="3" ry="3"/>
+  <text class="st3" transform="translate(334.5 309.4)"><tspan x="0" y="0">Enquiry form</tspan></text>
+  <line class="st19" x1="360" y1="316.4" x2="360" y2="330.4"/>
+  <rect class="st21" x="308" y="330.4" width="104" height="22" rx="3" ry="3"/>
+  <text class="st3" transform="translate(316.7 345.4)"><tspan x="0" y="0">HK + SA office details</tspan></text>
+  <text class="st6" transform="translate(308.5 453)"><tspan x="0" y="0">UTILITY / SYSTEM</tspan></text>
+  <line class="st18" x1="100" y1="460" x2="620" y2="460"/>
+  <rect class="st13" x="52" y="471" width="100" height="34" rx="3" ry="3"/>
+  <text class="st1" transform="translate(68.1 487)"><tspan x="0" y="0">Privacy Policy</tspan></text>
+  <text class="st5" transform="translate(86.5 499)"><tspan x="0" y="0">/privacy</tspan></text>
+  <rect class="st13" x="170" y="471" width="100" height="34" rx="3" ry="3"/>
+  <text class="st1" transform="translate(188.7 487)"><tspan x="0" y="0">Terms of Use</tspan></text>
+  <text class="st5" transform="translate(207.5 499)"><tspan x="0" y="0">/terms</tspan></text>
+  <rect class="st13" x="310" y="471" width="100" height="34" rx="3" ry="3"/>
+  <text class="st1" transform="translate(338 487)"><tspan x="0" y="0">404 Error</tspan></text>
+  <text class="st5" transform="translate(351.2 499)"><tspan x="0" y="0">/404</tspan></text>
+  <rect class="st13" x="450" y="471" width="100" height="34" rx="3" ry="3"/>
+  <text class="st1" transform="translate(468.7 487)"><tspan x="0" y="0">XML Sitemap</tspan></text>
+  <text class="st5" transform="translate(474.7 499)"><tspan x="0" y="0">/sitemap.xml</tspan></text>
+  <rect class="st13" x="568" y="471" width="100" height="34" rx="3" ry="3"/>
+  <text class="st1" transform="translate(593.3 487)"><tspan x="0" y="0">Robots.txt</tspan></text>
+  <text class="st5" transform="translate(598.2 499)"><tspan x="0" y="0">/robots.txt</tspan></text>
+  <text class="st6" transform="translate(275.2 549)"><tspan x="0" y="0">PAYLOAD CMS COLLECTIONS</tspan></text>
+  <line class="st18" x1="100" y1="556" x2="620" y2="556"/>
+  <rect class="st15" x="52" y="567" width="128" height="36" rx="3" ry="3"/>
+  <text class="st1" transform="translate(101.3 584)"><tspan x="0" y="0">Pages</tspan></text>
+  <text class="st4" transform="translate(82.7 596)"><tspan x="0" y="0">All 6 main pages</tspan></text>
+  <rect class="st15" x="196" y="567" width="128" height="36" rx="3" ry="3"/>
+  <text class="st1" transform="translate(239.4 584)"><tspan x="0" y="0">Services</tspan></text>
+  <text class="st4" transform="translate(227.2 596)"><tspan x="0" y="0">5 service entries</tspan></text>
+  <rect class="st15" x="340" y="567" width="128" height="36" rx="3" ry="3"/>
+  <text class="st1" transform="translate(386.8 584)"><tspan x="0" y="0">Brands</tspan></text>
+  <text class="st4" transform="translate(353.3 596)"><tspan x="0" y="0">Partner logos + metadata</tspan></text>
+  <rect class="st15" x="484" y="567" width="128" height="36" rx="3" ry="3"/>
+  <text class="st1" transform="translate(517.7 584)"><tspan x="0" y="0">Site Settings</tspan></text>
+  <text class="st4" transform="translate(499.1 596)"><tspan x="0" y="0">Nav, footer, SEO globals</tspan></text>
+  <text class="st6" transform="translate(255.9 643)"><tspan x="0" y="0">GLOBAL COMPONENTS (every page)</tspan></text>
+  <line class="st18" x1="100" y1="650" x2="620" y2="650"/>
+  <rect class="st14" x="16" y="661" width="98" height="26" rx="3" ry="3"/>
+  <text class="st0" transform="translate(43.7 679)"><tspan x="0" y="0">Navigation</tspan></text>
+  <rect class="st14" x="124" y="661" width="98" height="26" rx="3" ry="3"/>
+  <text class="st0" transform="translate(160 679)"><tspan x="0" y="0">Footer</tspan></text>
+  <rect class="st14" x="232" y="661" width="98" height="26" rx="3" ry="3"/>
+  <text class="st0" transform="translate(249.5 679)"><tspan x="0" y="0">SEO meta / OG</tspan></text>
+  <rect class="st14" x="340" y="661" width="98" height="26" rx="3" ry="3"/>
+  <text class="st0" transform="translate(359.7 679)"><tspan x="0" y="0">Cookie banner</tspan></text>
+  <rect class="st14" x="448" y="661" width="98" height="26" rx="3" ry="3"/>
+  <text class="st0" transform="translate(462.1 679)"><tspan x="0" y="0">Contact CTA strip</tspan></text>
+  <rect class="st14" x="556" y="661" width="148" height="26" rx="3" ry="3"/>
+  <text class="st0" transform="translate(581.5 679)"><tspan x="0" y="0">Form handler / webhook</tspan></text>
+  <text class="st11" transform="translate(177.4 727)"><tspan x="0" y="0">6 primary pages · 5 utility / system · 4 CMS collections · 6 global components</tspan></text>
+</svg>
