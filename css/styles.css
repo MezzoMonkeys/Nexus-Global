@@ -225,6 +225,10 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
 #where-we-work.stack{z-index:3}
 #spotlight.stack{z-index:4}
 
+/* Contact */
+#contact.stack{z-index:1}
+#faq.stack{z-index:2}
+
 .hero__pill{margin-bottom:28px;color:var(--platinum);border-color:var(--plat-55)}
 .hero__h{font-size:clamp(44px,7.2vw,108px);line-height:1.02;letter-spacing:-0.02em;color:var(--platinum);margin-bottom:20px}
 .hero__sub{font-size:18px;line-height:1.55;color:var(--plat-85);max-width:58ch;margin:0 auto}
