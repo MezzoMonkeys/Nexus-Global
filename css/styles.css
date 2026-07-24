@@ -106,7 +106,7 @@ a{color:inherit;text-decoration:none}
    authored once as percentage-viewBox paths so they scale with the section
    responsively without per-frame recomputation. */
 .pin-stripe-svg{position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;overflow:visible}
-.pin-stripe-path{fill:none;stroke:var(--accent);stroke-width:1;stroke-linecap:round;stroke-linejoin:round}
+.pin-stripe-path{fill:none;stroke:var(--accent);stroke-width:.25;stroke-linecap:round;stroke-linejoin:round}
 /* Butt cap (no round bump) at the shared end where the two spill paths
    meet the main path's own end — avoids stacking three round caps on top
    of each other at one point, which reads as a small blob at the joint. */
@@ -118,7 +118,7 @@ a{color:inherit;text-decoration:none}
    animate a position that would have to be recomputed every frame. */
 .pin-stripe-bar--seam{top:0;width:100%;opacity:0;transition:opacity .3s var(--ease)}
 .pin-stripe-bar--seam.is-visible{opacity:1}
-.pin-stripe-bar--cta{bottom:0;width:0%;transition:width 1.3s var(--ease)}
+.pin-stripe-bar--cta{bottom:0;width:0%;height:2px;transition:width 1.3s var(--ease)}
 .pin-stripe-bar--cta.is-filling{width:100%}
 @media (prefers-reduced-motion: reduce){
   .pin-stripe-bar--cta{transition:none}
