@@ -51,7 +51,7 @@
     path.style.strokeDashoffset = path._len * (1 - clamp01(progress));
   }
   function makeChapter(hostEl, nextEl, onDraw){
-    return { hostEl: hostEl, nextEl: nextEl, onDraw: onDraw, state: 'pre', target: 0, displayed: 0, pauseSince: null };
+    return { hostEl: hostEl, nextEl: nextEl, onDraw: onDraw, state: 'pre', target: 0, displayed: 0, pauseSince: null, armedSince: null };
   }
 
   var weOwnLock = false;
@@ -62,6 +62,7 @@
   var DRAW_DISTANCE = 480;   // wheel-delta-equivalent px to fully draw a chapter
   var PAUSE_MS = 550;        // rest beat once fully drawn, before releasing
   var SMOOTH = 0.15;         // per-frame lerp factor from displayed toward target
+  var IDLE_TIMEOUT_MS = 4000; // see armedSince handling in renderLoop below
 
   // Wires one page's chapter sequence into the engine. allPaths is every
   // SVG path used across that page's chapters (for the one-time
@@ -188,10 +189,15 @@
         chapter.state = 'armed';
       }
 
+      // Any live input while armed resets the idle clock the renderLoop
+      // watches below — only genuine silence counts as "stuck".
+      if (chapter.state === 'armed') chapter.armedSince = performance.now();
+
       chapter.target = clamp01(chapter.target + amount / DRAW_DISTANCE);
 
       if (chapter.target <= 0){
         chapter.state = 'pre';
+        chapter.armedSince = null;
         unlock();
         return false; // let this gesture fall through to a normal scroll
       }
@@ -213,6 +219,22 @@
     // once displayed has genuinely caught up does the pause clock start.
     function renderLoop(){
       chapters.forEach(function(chapter){
+        // Self-healing timeout: 'paused' already resolves on its own via
+        // pauseSince below, but 'armed' does not — if the user stops
+        // scrolling mid-gesture (distracted, switched to the scrollbar,
+        // whatever) with the section only partly drawn, nothing else here
+        // ever moves target again, so overflow:hidden would stay applied
+        // forever with no forward AND no backward scroll working. Rather
+        // than depend on the user knowing Home/End is an escape hatch,
+        // just finish the draw on its own after a few seconds of true
+        // silence — armedSince is reset on every live input in drive()
+        // above, so this only fires once input has genuinely stopped.
+        if (chapter.state === 'armed' && chapter.armedSince != null
+            && performance.now() - chapter.armedSince >= IDLE_TIMEOUT_MS){
+          chapter.target = 1;
+          beginPause(chapter);
+        }
+
         chapter.displayed += (chapter.target - chapter.displayed) * SMOOTH;
         if (Math.abs(chapter.target - chapter.displayed) < 0.0005) chapter.displayed = chapter.target;
         chapter.onDraw(chapter.displayed);
@@ -426,5 +448,34 @@
     ];
 
     initLineSequence(chapters, [pathA, pathB, pathC, pathD], null);
+  })();
+
+  // ── Contact wiring ───────────────────────────────────────────────────
+  // No preceding captured chapter on this page, just a plain seam bar
+  // riding along as #faq slides up over #contact — same visual language
+  // as the Home/About seam bars, but with nothing upstream to wait on, so
+  // this skips initLineSequence()/the whole capture engine entirely and
+  // is just a standalone scroll-position toggle.
+  (function(){
+    var seamBar = document.getElementById('pinStripeContactSeamBar');
+    var faqEl = document.getElementById('faq');
+    if (!seamBar || !faqEl) return;
+
+    if (reduceMotion){
+      seamBar.classList.add('is-visible');
+      return;
+    }
+
+    function update(){
+      var raw = incomingRaw(faqEl);
+      seamBar.classList.toggle('is-visible', raw > 0.01 && raw < 0.97);
+    }
+    var ticking = false;
+    window.addEventListener('scroll', function(){
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(function(){ update(); ticking = false; });
+    }, { passive: true });
+    update();
   })();
 })();

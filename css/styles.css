@@ -529,7 +529,14 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
 @media(max-width:640px){.enquiry-form__grid{grid-template-columns:1fr}}
 
 /* Footer */
-.site-footer{background:var(--ink);color:var(--plat-55);padding:56px var(--pad) 96px;padding-right:calc(var(--pad) + 64px);font-family:var(--font-label);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;display:flex;justify-content:space-between;align-items:center;gap:24px;flex-wrap:wrap}
+/* position+z-index here isn't decorative: on Home, .globe-stage (see its own
+   comment) is a position:fixed, full-viewport layer with z-index:0 — every
+   .stack section has its own explicit z-index so it paints above that fine,
+   but this plain static block otherwise falls into the "non-positioned
+   in-flow content" paint tier, which sits BELOW any positioned z-index:0
+   layer regardless of DOM order. Without this, the globe stage's opaque
+   ink background silently paints over the footer on Home only. */
+.site-footer{position:relative;z-index:1;background:var(--ink);color:var(--plat-55);padding:56px var(--pad) 96px;padding-right:calc(var(--pad) + 64px);font-family:var(--font-label);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;display:flex;justify-content:space-between;align-items:center;gap:24px;flex-wrap:wrap}
 .site-footer a{color:var(--plat-55);transition:color .2s}
 .site-footer a:hover{color:var(--platinum)}
 
