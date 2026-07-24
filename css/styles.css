@@ -19,6 +19,12 @@
   --plat-55:rgba(237,237,237,.55);
   --plat-70:rgba(237,237,237,.70);
   --plat-85:rgba(237,237,237,.85);
+  --ink-rgb:10,10,10;
+  --plat-rgb:237,237,237;
+  --accent:#660007;
+  --accent-rgb:102,0,7;
+  --accent-glow-rgb:255,42,58;
+  --noise-svg:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   --ease:cubic-bezier(.2,.65,.25,1);
   --container:1240px;
   --pad:clamp(20px,4vw,52px);
@@ -61,7 +67,8 @@ a{color:inherit;text-decoration:none}
 .nav__links a.active,.nav__links a.pill-active{color:var(--platinum);opacity:1}
 .nav.dark .nav__links a.active,.nav.dark .nav__links a.pill-active{color:var(--ink)}
 .nav__right{justify-self:end;font-family:var(--font-label);font-size:10px;font-weight:500;letter-spacing:.10em;text-transform:uppercase;opacity:.7;display:flex;align-items:center;gap:12px}
-.nav__menu-btn{display:none;background:transparent;border:1px solid currentColor;border-radius:999px;padding:8px 15px;font-family:var(--font-label);font-size:10px;font-weight:500;letter-spacing:.10em;text-transform:uppercase;color:inherit}
+.nav__menu-btn{display:none;background:transparent;border:1px solid currentColor;border-radius:999px;padding:8px 15px;font-family:var(--font-label);font-size:10px;font-weight:500;letter-spacing:.10em;text-transform:uppercase;color:inherit;transition:border-color .25s var(--ease),color .25s var(--ease)}
+.nav__menu-btn:hover,.nav__menu-btn:active{border-color:var(--accent);color:var(--accent)}
 .nav__menu{position:fixed;top:var(--nav-h);left:0;right:0;z-index:49;background:var(--platinum);border-radius:0 0 32px 32px;display:none;padding:12px var(--pad) 24px;max-height:calc(100vh - var(--nav-h));overflow-y:auto}
 .nav__menu.open{display:block}
 .nav__menu a{display:block;padding:14px 0;border-bottom:var(--hairline);font-weight:500;font-size:15px}
@@ -85,6 +92,37 @@ a{color:inherit;text-decoration:none}
 .motif svg{width:100%;height:100%;display:block}
 .motif path,.motif circle,.motif ellipse{fill:none;stroke:var(--ink-10);stroke-width:1}
 .page--dark .motif path,.page--dark .motif circle,.page--dark .motif ellipse{stroke:var(--plat-12)}
+
+/* Pin-stripe scroll line (Home only): a single #660007 line threaded through
+   the intro→value→network→cta sections, choreographed by js/pin-stripe.js.
+   Each chapter is a direct child of its own <section> (a sibling of
+   .page__inner, not nested inside it) so it spans full section width and
+   sits at z-index:0 — behind .page__inner's z-index:1 content — using the
+   existing stacking/pin system for "disappears behind the card" and "rides
+   the seam as the next panel slides up" for free, rather than the script
+   having to fake those with manual opacity/position math. Reveal itself
+   (stroke-dasharray/dashoffset for the SVG chapters, width/opacity for the
+   plain-bar chapters) is scroll-scrubbed in JS; the shapes below are
+   authored once as percentage-viewBox paths so they scale with the section
+   responsively without per-frame recomputation. */
+.pin-stripe-svg{position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;overflow:visible}
+.pin-stripe-path{fill:none;stroke:var(--accent);stroke-width:1;stroke-linecap:round;stroke-linejoin:round}
+/* Butt cap (no round bump) at the shared end where the two spill paths
+   meet the main path's own end — avoids stacking three round caps on top
+   of each other at one point, which reads as a small blob at the joint. */
+.pin-stripe-path--butt{stroke-linecap:butt}
+.pin-stripe-bar{position:absolute;left:0;height:8px;background:var(--accent);pointer-events:none;z-index:0}
+/* Lives inside #teasers, pinned to ITS OWN top edge — so as #teasers
+   physically slides up over #network-teaser (normal free-scroll, not a
+   captured segment), this rides along for free instead of trying to
+   animate a position that would have to be recomputed every frame. */
+.pin-stripe-bar--seam{top:0;width:100%;opacity:0;transition:opacity .3s var(--ease)}
+.pin-stripe-bar--seam.is-visible{opacity:1}
+.pin-stripe-bar--cta{bottom:0;width:0%;transition:width 1.3s var(--ease)}
+.pin-stripe-bar--cta.is-filling{width:100%}
+@media (prefers-reduced-motion: reduce){
+  .pin-stripe-bar--cta{transition:none}
+}
 .page__foot{max-width:var(--container);margin:32px auto 0;width:100%;display:flex;justify-content:space-between;align-items:center;gap:16px;font-family:var(--font-label);font-size:10.5px;letter-spacing:.10em;text-transform:uppercase;padding-top:18px;border-top:var(--hairline)}
 .page--dark .page__foot{border-top-color:var(--plat-10)}
 .page__foot-l{font-weight:600}
@@ -139,25 +177,31 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
 .spotlight:hover::after{opacity:1}
 .page--dark .spotlight::after{background:radial-gradient(circle at var(--spot-x,50%) var(--spot-y,50%),var(--plat-10),transparent 70%)}
 
-/* Buttons */
-.btn-pill{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:999px;padding:13px 24px;font-family:var(--font-label);font-size:12px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:opacity .25s var(--ease),transform .2s var(--ease);text-decoration:none;border:1px solid transparent;white-space:nowrap}
-.btn-pill:hover{opacity:.78}
-.btn-pill:active{transform:scale(.97)}
+/* Buttons — every one converges on the same accent-red hover/active state
+   regardless of variant or light/dark page context, so this is one visual
+   language site-wide rather than each button keeping its own inverted
+   colour scheme on interaction. Each hover/active rule is placed AFTER the
+   variant rules it needs to override (.btn-pill--fill, .page--dark
+   .btn-pill--fill, etc.) since they're equal specificity — a plain
+   :hover pairs with one extra class at most, so ties are broken by source
+   order, not by piling on selector specificity. */
+.btn-pill{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:999px;padding:13px 24px;font-family:var(--font-label);font-size:12px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:background .25s var(--ease),color .25s var(--ease),border-color .25s var(--ease),transform .2s var(--ease);text-decoration:none;border:1px solid transparent;white-space:nowrap}
 .btn-pill--fill{background:var(--ink);color:var(--platinum);border-color:var(--ink)}
 .page--dark .btn-pill--fill{background:var(--platinum);color:var(--ink);border-color:var(--platinum)}
 .btn-pill--ghost{background:transparent;border-color:var(--ink-30);color:var(--ink)}
 .page--dark .btn-pill--ghost{border-color:var(--plat-30);color:var(--platinum)}
+.btn-pill:hover,.btn-pill:active{background:var(--accent);color:var(--platinum);border-color:var(--accent)}
+.btn-pill:active{transform:scale(.97)}
 
-.arrow-btn{width:42px;height:42px;border-radius:50%;border:1.5px solid currentColor;background:transparent;display:grid;place-items:center;color:inherit;transition:transform .25s var(--ease),background .3s var(--ease)}
-.arrow-btn:hover{background:currentColor}
-.arrow-btn:hover svg{stroke:var(--platinum)}
-.page--dark .arrow-btn:hover svg{stroke:var(--ink)}
-.arrow-btn svg{width:14px;height:14px}
+.arrow-btn{width:42px;height:42px;border-radius:50%;border:1.5px solid currentColor;background:transparent;display:grid;place-items:center;color:inherit;transition:transform .25s var(--ease),background .3s var(--ease),border-color .3s var(--ease)}
+.arrow-btn svg{width:14px;height:14px;transition:stroke .3s var(--ease)}
+.arrow-btn:hover,.arrow-btn:active{background:var(--accent);border-color:var(--accent)}
+.arrow-btn:hover svg,.arrow-btn:active svg{stroke:var(--platinum)}
 
-.back-to-top{position:fixed;right:24px;bottom:24px;z-index:40;background:var(--ink);color:var(--platinum);border-color:var(--ink);opacity:0;pointer-events:none;transition:opacity .3s var(--ease),transform .25s var(--ease)}
+.back-to-top{position:fixed;right:24px;bottom:24px;z-index:40;background:var(--ink);color:var(--platinum);border-color:var(--ink);opacity:0;pointer-events:none;transition:opacity .3s var(--ease),transform .25s var(--ease),background .3s var(--ease),border-color .3s var(--ease)}
 .back-to-top.visible{opacity:1;pointer-events:auto}
-.back-to-top:hover{background:var(--platinum);color:var(--ink)}
-.back-to-top:hover svg{stroke:var(--ink)}
+.back-to-top:hover,.back-to-top:active{background:var(--accent);color:var(--platinum);border-color:var(--accent)}
+.back-to-top:hover svg,.back-to-top:active svg{stroke:var(--platinum)}
 
 /* Hero / cover */
 .hero{display:flex;flex-direction:column;align-items:center;text-align:center;flex:1;padding:24px 0;justify-content:center}
@@ -279,6 +323,87 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
 .card:hover{background:var(--ink-10)}
 .page--dark .card{background:var(--plat-06);border:1px solid var(--plat-10);backdrop-filter:blur(20px) saturate(140%);-webkit-backdrop-filter:blur(20px) saturate(140%);box-shadow:0 1px 0 var(--plat-10) inset,0 12px 36px rgba(0,0,0,.35)}
 .page--dark .card:hover{background:var(--plat-10)}
+
+/* Interactive gradient + noise, adapted from the
+   interactive-gradient-glassmorphism-with-noise reference: flowing
+   greyscale bands plus a grain layer, kept to ink/platinum only for now
+   (the --accent/--accent-glow-rgb tokens above are defined but
+   deliberately unused here — the accent colour is being introduced
+   elsewhere, at a later stage, not in this effect). The dominant band
+   matches each page's own background (platinum-dominant on light pages,
+   ink-dominant on .page--dark) so the sweep reads as a native sheen on
+   that surface rather than fighting it; the opposite tone appears only
+   as a lower-alpha second band for contrast/definition, not as an equal
+   partner.
+   Scoped to .spotlight generally (not just .card) so it also covers the
+   teaser-card links, the hero-feature stat/list panels, and the
+   process__step blocks — every one of those already carries .spotlight
+   for the pre-existing cursor-glow ::after, so tagging along on that
+   class picks up main.js's mousemove tracking too, for free.
+   Diagonal linear-gradient bands (not radial) sized well beyond the
+   element and slid via background-position, so what's visible is always
+   a soft sweep crossing at an angle rather than a circular hotspot — a
+   tight radial falloff reads as a static "spot"; an oversized band
+   scrolling past reads as flow. Two crossing bands at different angles/
+   phases plus per-element desync (nth-of-type) so neighbours in the same
+   grid never mirror each other, plus a transform nudge toward the live
+   cursor, reusing the --spot-x/--spot-y custom properties main.js already
+   sets on every .spotlight element. Lives on ::before; .spotlight already
+   provides position:relative and the overflow:hidden that clips it to
+   the element's rounded corners. Direct children are pushed to their own
+   stacking layer so text/icons always sit above both this and ::after. */
+.spotlight{isolation:isolate}
+.spotlight>*{position:relative;z-index:1}
+.spotlight::before{
+  content:"";
+  position:absolute;
+  inset:-30%;
+  z-index:0;
+  pointer-events:none;
+  opacity:.95;
+  filter:blur(12px);
+  background-image:
+    linear-gradient(128deg,transparent 8%,rgba(var(--plat-rgb),.85) 38%,rgba(var(--plat-rgb),.62) 58%,transparent 88%),
+    linear-gradient(250deg,transparent 15%,rgba(var(--ink-rgb),.5) 46%,transparent 82%),
+    var(--noise-svg);
+  background-size:240% 240%,260% 260%,180px 180px;
+  background-repeat:no-repeat,no-repeat,repeat;
+  background-blend-mode:normal,normal,soft-light;
+  background-position:0% 0%,100% 100%,0 0;
+  transform:translate(calc((var(--spot-x,50%) - 50%) * .22),calc((var(--spot-y,50%) - 50%) * .22));
+  animation:cardFlow1 13s ease-in-out infinite;
+  transition:opacity .4s var(--ease),transform .5s var(--ease);
+}
+.spotlight:hover::before{opacity:1}
+.spotlight:nth-of-type(2)::before{animation-name:cardFlow2;animation-duration:15s}
+.spotlight:nth-of-type(3)::before{animation-name:cardFlow3;animation-duration:17s}
+.spotlight:nth-of-type(4)::before{animation-name:cardFlow1;animation-duration:19s;animation-delay:-6s}
+.page--dark .spotlight::before{
+  opacity:.95;
+  background-image:
+    linear-gradient(128deg,transparent 8%,rgba(var(--ink-rgb),.85) 38%,rgba(var(--ink-rgb),.62) 58%,transparent 88%),
+    linear-gradient(250deg,transparent 15%,rgba(var(--plat-rgb),.5) 46%,transparent 82%),
+    var(--noise-svg);
+}
+.page--dark .spotlight:hover::before{opacity:1}
+@keyframes cardFlow1{
+  0%{background-position:0% 0%,100% 100%,0 0}
+  50%{background-position:100% 55%,0% 45%,0 0}
+  100%{background-position:0% 0%,100% 100%,0 0}
+}
+@keyframes cardFlow2{
+  0%{background-position:100% 0%,0% 100%,0 0}
+  50%{background-position:10% 70%,90% 30%,0 0}
+  100%{background-position:100% 0%,0% 100%,0 0}
+}
+@keyframes cardFlow3{
+  0%{background-position:50% 100%,50% 0%,0 0}
+  50%{background-position:0% 25%,100% 75%,0 0}
+  100%{background-position:50% 100%,50% 0%,0 0}
+}
+@media (prefers-reduced-motion: reduce){
+  .spotlight::before{animation:none;transform:none;transition:opacity .4s var(--ease)}
+}
 
 /* Compact card variant: for panels where a locked/pinned scroll means overflow
    content becomes unreachable, so everything must fit within one viewport. */

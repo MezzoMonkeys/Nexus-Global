@@ -83,7 +83,7 @@
         </h1>
         <p class="hero__sub reveal reveal-d3">Nexus Global is a Hong Kong-based trading house and a proud subsidiary of Lincor, supplying retail groups and brands across South Africa and Africa, backed by relationships our leadership has carried for the better part of their careers.</p>
       </div>
-      <div class="hero-feature hero-feature--stat reveal reveal-d4">
+      <div class="hero-feature hero-feature--stat spotlight reveal reveal-d4">
         <div class="hero-feature__num">100+</div>
         <div class="hero-feature__label">Years combined director experience in China</div>
       </div>
@@ -91,7 +91,10 @@
   </div>
 </section>
 
-<section class="page page--dark stack" id="story">
+<section class="page stack" id="story">
+  <svg class="pin-stripe-svg" id="pinStripeAboutA" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+    <path class="pin-stripe-path" d="M 100 52 L 54 52 Q 51 52 51 58 L 51 75 Q 51 79 55 79 L 100 79"/>
+  </svg>
   <div class="page__inner">
     <p class="eyebrow reveal">Our story</p>
     <h2 class="display--sm reveal reveal-d2" style="margin:14px 0 22px">A New Name, Deep Roots</h2>
@@ -102,11 +105,14 @@
   </div>
 </section>
 
-<section class="page stack" id="values">
+<section class="page page--dark stack" id="values">
   <div class="motif" aria-hidden="true"><svg viewBox="0 0 1000 700" preserveAspectRatio="xMidYMid slice">
     <circle cx="80" cy="180" r="260"/>
     <circle cx="1120" cy="760" r="640"/>
   </svg></div>
+  <svg class="pin-stripe-svg" id="pinStripeAboutB" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+    <path class="pin-stripe-path" d="M 100 99.5 L 0 99.5"/>
+  </svg>
   <div class="page__inner">
     <div class="hero hero--split" style="padding:0">
       <div class="hero__col">
@@ -119,7 +125,7 @@
           <h3 style="margin-bottom:8px">Reliability & partnership</h3>
           <p class="support">We do what we say, from sample approval to final delivery, so our partners know what to expect at every step. That starts with genuinely understanding your business: your margins, your customers, your constraints, before we recommend a single product.</p>
         </div>
-        <div class="reveal reveal-d3" style="border-top:var(--hairline);padding-top:24px">
+        <div class="reveal reveal-d3" style="border-top:var(--hairline-dark);padding-top:24px">
           <h3 style="margin-bottom:8px">Precision & reach</h3>
           <p class="support">Trade across continents leaves no room for error, so we apply rigorous process to every order, every shipment, every document. Our network spans China's manufacturing base and Africa's retail corridors, OEM, keychain retail, and open market alike, connected deliberately, to your advantage.</p>
         </div>
@@ -128,10 +134,11 @@
   </div>
 </section>
 
-<section class="page page--dark stack" id="capabilities">
+<section class="page stack" id="capabilities">
   <div class="motif" aria-hidden="true"><svg viewBox="0 0 1000 700" preserveAspectRatio="xMidYMid slice">
     <circle cx="60" cy="60" r="220"/>
   </svg></div>
+  <div class="pin-stripe-bar pin-stripe-bar--seam" id="pinStripeAboutSeamBar" aria-hidden="true"></div>
   <div class="page__inner">
     <p class="eyebrow reveal">Our capabilities</p>
     <h2 class="display--sm reveal reveal-d2" style="margin:14px 0 16px">A Lean, Senior Team</h2>
@@ -176,6 +183,9 @@
     <circle cx="60" cy="600" r="240"/>
     <circle cx="1080" cy="80" r="360"/>
   </svg></div>
+  <svg class="pin-stripe-svg" id="pinStripeAboutC" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+    <path class="pin-stripe-path" d="M 0 32 L 46 32 Q 49 32 49 40 L 49 62 Q 49 66 53 66 L 100 66"/>
+  </svg>
   <div class="page__inner" style="justify-content:center;align-items:center;text-align:center">
     <p class="eyebrow reveal">Part of something bigger</p>
     <h2 class="display--sm reveal reveal-d2" style="margin:14px 0 20px">Backed by Lincor Holdings</h2>
@@ -194,5 +204,6 @@
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
 </button>
 <script src="/js/main.js"></script>
+<script src="/js/pin-stripe.js"></script>
 </body>
 </html>
