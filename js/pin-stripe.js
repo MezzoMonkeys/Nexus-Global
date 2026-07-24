@@ -135,11 +135,18 @@
       // higher z-index sticky panel, not the next section itself being
       // sticky yet — so hostEl.rect.top can't tell "just barely reversed"
       // from "deep into the gap"; only the successor's own incoming
-      // position can. prev.nextEl is null for the very last chapter on a
-      // page (nothing further to gate re-entry on), so that's guarded too.
+      // position can.
+      // For the very last chapter on a page there's no successor to check
+      // (nextEl is null) — fall back to the chapter's OWN settle position
+      // instead, mirroring the forward arm-check, so reversing back into
+      // it from whatever follows (footer, or nothing) still works instead
+      // of silently never re-arming.
       if (amount < 0 && activeIndex > 0 && (!chapter || chapter.state === 'pre') && !lockedByOther()){
         var prev = chapters[activeIndex - 1];
-        if (prev.nextEl && prev.target > 0 && incomingRaw(prev.nextEl) <= 0.02){
+        var readyToReenter = prev.nextEl
+          ? incomingRaw(prev.nextEl) <= 0.02
+          : prev.hostEl.getBoundingClientRect().top <= pinTopPx(prev.hostEl) + 2;
+        if (prev.target > 0 && readyToReenter){
           activeIndex--;
           chapter = prev;
           chapter.state = 'armed';
@@ -381,5 +388,43 @@
     }
 
     initLineSequence(chapters, [pathA, pathB, pathC], onPassiveScroll);
+  })();
+
+  // ── Network wiring ───────────────────────────────────────────────────
+  (function(){
+    var svgA = document.getElementById('pinStripeNetA');
+    var svgB = document.getElementById('pinStripeNetB');
+    var svgC = document.getElementById('pinStripeNetC');
+    var svgD = document.getElementById('pinStripeNetD');
+    if (!svgA || !svgB || !svgC || !svgD) return;
+
+    var coverEl = document.getElementById('cover');
+    var footprintEl = document.getElementById('footprint');
+    var whereWeWorkEl = document.getElementById('where-we-work');
+    var spotlightEl = document.getElementById('spotlight');
+    if (!coverEl || !footprintEl || !whereWeWorkEl || !spotlightEl) return;
+
+    var pathA = svgA.querySelector('.pin-stripe-path');
+    var pathB = svgB.querySelector('.pin-stripe-path');
+    var pathC = svgC.querySelector('.pin-stripe-path');
+    var pathD = svgD.querySelector('.pin-stripe-path');
+
+    var chapters = [
+      // Straight vertical line, no turn — runs the full height of #cover
+      // behind the hero-feature "Where we operate" list block, continuing
+      // at the same x into chapter B's entry at the top of #footprint.
+      makeChapter(coverEl, footprintEl, function(p){ drawPath(pathA, p); }),
+      makeChapter(footprintEl, whereWeWorkEl, function(p){ drawPath(pathB, p); }),
+      // Fresh entry from the right (not a continuation of B's exit point)
+      // — same pattern as About's chapter C re-entering from a different
+      // edge. Runs down to near the very bottom so it continues visually
+      // into chapter D's top-centre entry on #spotlight.
+      makeChapter(whereWeWorkEl, spotlightEl, function(p){ drawPath(pathC, p); }),
+      // Last chapter on the page — nextEl null, nothing further to gate
+      // reverse-reentry on.
+      makeChapter(spotlightEl, null, function(p){ drawPath(pathD, p); })
+    ];
+
+    initLineSequence(chapters, [pathA, pathB, pathC, pathD], null);
   })();
 })();
