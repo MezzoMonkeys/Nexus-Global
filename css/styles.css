@@ -313,6 +313,16 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
 .hero-feature__icon{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.6;flex-shrink:0;margin-right:12px;color:var(--plat-55)}
 @media(max-width:900px){.hero--split{flex-direction:column;text-align:center}.hero--split .hero__col{align-items:center;text-align:center;max-width:100%}.hero--split .hero__sub{text-align:center}.hero-feature{flex:0 0 auto;max-width:420px}}
 
+/* Text-left/image-right content block (e.g. About's "Our story") — same
+   side-by-side shape as .hero--split but for plain body copy rather than
+   a hero pill+headline, so it doesn't force that component's own type
+   scale onto ordinary paragraphs. */
+.content-split{display:flex;align-items:flex-start;gap:56px;flex-wrap:wrap}
+.content-split__text{flex:1 1 420px;max-width:640px}
+.content-split__image{flex:0 1 380px;width:100%;max-width:380px;border-radius:var(--radius-card);overflow:hidden}
+.content-split__image img{width:100%;height:100%;object-fit:cover;display:block}
+@media(max-width:900px){.content-split{flex-direction:column}.content-split__image{max-width:420px;margin:0 auto}}
+
 /* Stat strip, individual rounded cards rather than a divided strip */
 .stat-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin:44px 0 28px}
 .stat-strip__cell{padding:28px 26px;border-radius:var(--radius-card);background:var(--ink-04)}

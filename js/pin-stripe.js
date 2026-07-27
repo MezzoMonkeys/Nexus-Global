@@ -79,6 +79,27 @@
     update();
   }
 
+  // Rebuilds a path's `d` from a Y coordinate measured off a real content
+  // element's bottom edge (as a % of hostEl's own height), for a path whose
+  // entry/turn point needs to clear a block that reflows dramatically
+  // across widths (e.g. a 3-column card grid that stacks to 1 column at
+  // narrow viewports) rather than staying at some small, fairly stable
+  // fraction of the section. Recomputes on load/resize; the ongoing render
+  // loop already calls each chapter's onDraw (hence drawPath) every frame
+  // regardless, so updating path._len here is enough for the next frame to
+  // redraw at the new length — no need to also re-push current progress.
+  function anchorPathToContent(path, hostEl, landmarkEl, buildD, extraPx, minPct, maxPct){
+    if (!path || !hostEl || !landmarkEl) return;
+    var hostRect = hostEl.getBoundingClientRect();
+    if (hostRect.height <= 0) return;
+    var landRect = landmarkEl.getBoundingClientRect();
+    var pct = ((landRect.bottom - hostRect.top) + (extraPx || 0)) / hostRect.height * 100;
+    pct = Math.min(Math.max(pct, minPct), maxPct);
+    path.setAttribute('d', buildD(pct));
+    var len = path.getTotalLength();
+    path.style.strokeDasharray = len;
+    path._len = len;
+  }
 
   var weOwnLock = false;
   function lock(){ weOwnLock = true; document.documentElement.style.overflow = 'hidden'; document.body.style.overflow = 'hidden'; }
@@ -338,6 +359,25 @@
     var path3Main = document.getElementById('pinStripe3Main');
     var path3SpillL = document.getElementById('pinStripe3SpillL');
     var path3SpillR = document.getElementById('pinStripe3SpillR');
+
+    // path3Main enters behind #teasers' own .teaser-grid card row before
+    // turning downward — at narrower widths that grid stacks from 3
+    // columns to 1, making the row (and hence the safe entry height) much
+    // taller, so a fixed percentage tuned for the 3-column layout ends up
+    // entering mid-grid once it stacks. Anchor the entry to the grid's
+    // real rendered bottom edge instead (same fix as Home's #stats line
+    // needed earlier, moved here along with the chapter itself).
+    var teaserGridEl = teasersEl.querySelector('.teaser-grid');
+    function refreshPath3Entry(){
+      anchorPathToContent(path3Main, teasersEl, teaserGridEl, function(entryY){
+        return 'M 100 ' + entryY.toFixed(2) + ' L 54 ' + entryY.toFixed(2) +
+          ' Q 50 ' + entryY.toFixed(2) + ' 50 ' + (entryY + 4).toFixed(2) + ' L 50 99';
+      }, 30, 35, 93);
+    }
+    if (teaserGridEl){
+      refreshPath3Entry();
+      window.addEventListener('resize', refreshPath3Entry);
+    }
 
     var chapters = [
       makeChapter(statsEl, valueTeaserEl, function(p){ drawPath(path1, p); }),
