@@ -1,10 +1,13 @@
 /* ── Pin-stripe scroll line ───────────────────────────────────────────────
-   A single #660007 line threaded through specific sections on Home and
-   About, entirely scroll-scrubbed. Shared engine below, page-specific
-   wiring (which elements, which paths) at the bottom — only one wiring
-   block's element-existence guard will ever pass on a given page, since
-   each page's HTML only contains its own pin-stripe markup, so there's
-   no risk of two instances fighting over the same lock/listeners.
+   A single #660007 line threaded through specific sections on Home only —
+   About and Network & Markets use plain static seam bars instead (see
+   css/styles.css's .pin-stripe-bar--seam and each page's own markup;
+   they need no JS at all, which is the point: a scroll-captured, path-
+   drawing line responds to section height/content changes across
+   viewports in ways that took a lot of iteration to get right even once,
+   so it stayed exclusive to Home rather than multiplying that surface
+   area across every page). Shared engine below, Home's own wiring (which
+   elements, which paths) at the bottom.
 
    Scroll-CAPTURE per segment, same pattern as particle-globe.js's own gate:
    once a chapter's host section becomes the topmost pinned panel, further
@@ -53,6 +56,29 @@
   function makeChapter(hostEl, nextEl, onDraw){
     return { hostEl: hostEl, nextEl: nextEl, onDraw: onDraw, state: 'pre', target: 0, displayed: 0, pauseSince: null, armedSince: null };
   }
+
+  // Plain, capture-free "reached the bottom" fill bar for a page's last
+  // section — no scroll-jacking, just a passive listener toggling a CSS
+  // width transition. There's often a site-footer after the last section,
+  // so the section's own rect.top:0 isn't "the bottom of the page"; this
+  // checks the real document bottom instead. Continuous toggle, not a
+  // one-shot latch, so scrolling back away from the bottom un-fills it.
+  function wireBottomCtaBar(barEl){
+    if (!barEl) return;
+    if (reduceMotion){ barEl.classList.add('is-filling'); return; }
+    function update(){
+      var atBottom = (window.innerHeight + window.scrollY) >= (document.documentElement.scrollHeight - 4);
+      barEl.classList.toggle('is-filling', atBottom);
+    }
+    var ticking = false;
+    window.addEventListener('scroll', function(){
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(function(){ update(); ticking = false; });
+    }, { passive: true });
+    update();
+  }
+
 
   var weOwnLock = false;
   function lock(){ weOwnLock = true; document.documentElement.style.overflow = 'hidden'; document.body.style.overflow = 'hidden'; }
@@ -297,9 +323,8 @@
     var svg1 = document.getElementById('pinStripe1');
     var svg2 = document.getElementById('pinStripe2');
     var svg3 = document.getElementById('pinStripe3');
-    var seamBar = document.getElementById('pinStripeSeamBar');
     var ctaBar = document.getElementById('pinStripeCtaBar');
-    if (!svg1 || !svg2 || !svg3 || !seamBar || !ctaBar) return;
+    if (!svg1 || !svg2 || !svg3 || !ctaBar) return;
 
     var statsEl = document.getElementById('stats');
     var valueTeaserEl = document.getElementById('value-teaser');
@@ -317,15 +342,19 @@
     var chapters = [
       makeChapter(statsEl, valueTeaserEl, function(p){ drawPath(path1, p); }),
       makeChapter(valueTeaserEl, networkTeaserEl, function(p){ drawPath(path2, p); }),
-      // Main line draws first (right edge → centre → down), then the two
-      // spill paths reveal TOGETHER off the same remapped value — growing
-      // left and right simultaneously from the centre, not one side then
-      // the other. They're separate elements (SVG can't branch one path
-      // in two directions from an interior point) but stroke-linecap:
-      // butt on both (see .pin-stripe-path--butt) keeps the shared joint
-      // from reading as a seam — only the main path's own round end-cap
-      // shows.
-      makeChapter(networkTeaserEl, teasersEl, function(p){
+      // Now hosted by #teasers instead of #network-teaser (which lost its
+      // chapter entirely to make room for the image placeholder below its
+      // text — that transition is a plain free scroll now, same as About/
+      // Network elsewhere). Main line draws first (right edge → centre →
+      // down), then the two spill paths reveal TOGETHER off the same
+      // remapped value — growing left and right simultaneously from the
+      // centre, not one side then the other. They're separate elements
+      // (SVG can't branch one path in two directions from an interior
+      // point) but stroke-linecap:butt on both (see .pin-stripe-path--butt)
+      // keeps the shared joint from reading as a seam — only the main
+      // path's own round end-cap shows. Its spill now marks the #teasers→
+      // #cta seam, so there's no separate static seam bar needed here.
+      makeChapter(teasersEl, ctaEl, function(p){
         drawPath(path3Main, remap(p, 0, 0.5));
         var spillP = remap(p, 0.5, 1);
         drawPath(path3SpillL, spillP);
@@ -335,20 +364,9 @@
 
     function onPassiveScroll(forceStatic){
       if (forceStatic){
-        seamBar.classList.add('is-visible');
         ctaBar.classList.add('is-filling');
         return;
       }
-      // Delayed past the very start of #teasers' slide-in (not just >0) —
-      // chapter 3's own bottom bar sits right at #network-teaser's bottom
-      // edge, so fading this in the instant #teasers begins rising put it
-      // visible just a few pixels above that still-visible static bar:
-      // two lines at once for a moment. Waiting until #teasers has risen
-      // enough to have actually covered that area first means there's
-      // nothing left showing through underneath by the time this fades in.
-      var teasersRaw = incomingRaw(teasersEl);
-      seamBar.classList.toggle('is-visible', teasersRaw > 0.08 && teasersRaw < 0.97);
-
       // Continuous toggle, not a one-shot latch — scrolling back away
       // from the true bottom un-fills it symmetrically. There's a
       // site-footer after #cta, so #cta reaching rect.top:0 is NOT the
@@ -361,93 +379,16 @@
   })();
 
   // ── About wiring ─────────────────────────────────────────────────────
+  // Just the bottom-of-page fill bar in the last section (#lincor) — the
+  // seam bars themselves are static (see about.html), no JS needed.
   (function(){
-    var svgA = document.getElementById('pinStripeAboutA');
-    var svgB = document.getElementById('pinStripeAboutB');
-    var svgC = document.getElementById('pinStripeAboutC');
-    var seamBar = document.getElementById('pinStripeAboutSeamBar');
-    if (!svgA || !svgB || !svgC || !seamBar) return;
-
-    var storyEl = document.getElementById('story');
-    var valuesEl = document.getElementById('values');
-    var capabilitiesEl = document.getElementById('capabilities');
-    var lincorEl = document.getElementById('lincor');
-    if (!storyEl || !valuesEl || !capabilitiesEl || !lincorEl) return;
-
-    var pathA = svgA.querySelector('.pin-stripe-path');
-    var pathB = svgB.querySelector('.pin-stripe-path');
-    var pathC = svgC.querySelector('.pin-stripe-path');
-
-    var chapters = [
-      makeChapter(storyEl, valuesEl, function(p){ drawPath(pathA, p); }),
-      // Chapter B is just the bar itself (right edge → left edge), not an
-      // entry-plus-turn shape — it's what "reintroduces" chapter A's line
-      // (which exited #story off the right edge) as a progress-bar sweep
-      // rather than a curved path, landing at the seam above #capabilities.
-      makeChapter(valuesEl, capabilitiesEl, function(p){ drawPath(pathB, p); }),
-      // Last chapter on the page — nextEl is null since there's no
-      // further section to gate reverse-reentry on past this one.
-      makeChapter(lincorEl, null, function(p){ drawPath(pathC, p); })
-    ];
-
-    // Same seam-bar pattern as Home: lives inside #capabilities, pinned
-    // to ITS OWN top edge, so it rides along for free as #capabilities
-    // physically slides up over #values once chapter B's bar has fully
-    // filled. Delayed past the very start of the slide-in (not just >0)
-    // for the same reason as Home's — chapter B's own bar sits right at
-    // #values' bottom edge, so fading this in immediately would show two
-    // lines a few pixels apart for a moment.
-    function onPassiveScroll(forceStatic){
-      if (forceStatic){ seamBar.classList.add('is-visible'); return; }
-      // Explicit completion check, not just the scroll-position delay
-      // below — chapters[1] is chapter B (#values); as long as it hasn't
-      // reached 'done' this can never show, regardless of what incomingRaw
-      // happens to read (belt-and-suspenders against #capabilities ever
-      // appearing to move before chapter B's bar has actually finished).
-      if (chapters[1].state !== 'done') { seamBar.classList.remove('is-visible'); return; }
-      var raw = incomingRaw(capabilitiesEl);
-      seamBar.classList.toggle('is-visible', raw > 0.08 && raw < 0.97);
-    }
-
-    initLineSequence(chapters, [pathA, pathB, pathC], onPassiveScroll);
+    wireBottomCtaBar(document.getElementById('pinStripeAboutCtaBar'));
   })();
 
   // ── Network wiring ───────────────────────────────────────────────────
+  // Same: just the bottom-of-page fill bar in the last section (#spotlight).
   (function(){
-    var svgA = document.getElementById('pinStripeNetA');
-    var svgB = document.getElementById('pinStripeNetB');
-    var svgC = document.getElementById('pinStripeNetC');
-    var svgD = document.getElementById('pinStripeNetD');
-    if (!svgA || !svgB || !svgC || !svgD) return;
-
-    var coverEl = document.getElementById('cover');
-    var footprintEl = document.getElementById('footprint');
-    var whereWeWorkEl = document.getElementById('where-we-work');
-    var spotlightEl = document.getElementById('spotlight');
-    if (!coverEl || !footprintEl || !whereWeWorkEl || !spotlightEl) return;
-
-    var pathA = svgA.querySelector('.pin-stripe-path');
-    var pathB = svgB.querySelector('.pin-stripe-path');
-    var pathC = svgC.querySelector('.pin-stripe-path');
-    var pathD = svgD.querySelector('.pin-stripe-path');
-
-    var chapters = [
-      // Straight vertical line, no turn — runs the full height of #cover
-      // behind the hero-feature "Where we operate" list block, continuing
-      // at the same x into chapter B's entry at the top of #footprint.
-      makeChapter(coverEl, footprintEl, function(p){ drawPath(pathA, p); }),
-      makeChapter(footprintEl, whereWeWorkEl, function(p){ drawPath(pathB, p); }),
-      // Fresh entry from the right (not a continuation of B's exit point)
-      // — same pattern as About's chapter C re-entering from a different
-      // edge. Runs down to near the very bottom so it continues visually
-      // into chapter D's top-centre entry on #spotlight.
-      makeChapter(whereWeWorkEl, spotlightEl, function(p){ drawPath(pathC, p); }),
-      // Last chapter on the page — nextEl null, nothing further to gate
-      // reverse-reentry on.
-      makeChapter(spotlightEl, null, function(p){ drawPath(pathD, p); })
-    ];
-
-    initLineSequence(chapters, [pathA, pathB, pathC, pathD], null);
+    wireBottomCtaBar(document.getElementById('pinStripeNetCtaBar'));
   })();
 
   // ── Contact wiring ───────────────────────────────────────────────────
@@ -455,8 +396,11 @@
   // riding along as #faq slides up over #contact — same visual language
   // as the Home/About seam bars, but with nothing upstream to wait on, so
   // this skips initLineSequence()/the whole capture engine entirely and
-  // is just a standalone scroll-position toggle.
+  // is just a standalone scroll-position toggle. Plus the same
+  // bottom-of-page fill bar as every other page's last section.
   (function(){
+    wireBottomCtaBar(document.getElementById('pinStripeContactCtaBar'));
+
     var seamBar = document.getElementById('pinStripeContactSeamBar');
     var faqEl = document.getElementById('faq');
     if (!seamBar || !faqEl) return;
