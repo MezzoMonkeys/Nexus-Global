@@ -331,6 +331,16 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
 #values.stack{z-index:3}
 #capabilities.stack{z-index:4}
 #lincor.stack{z-index:5}
+/* Brand navy, distinct from the site's usual .page--dark pine - this
+   section is the one place Lincor (the parent group) is the subject, so it
+   gets the parent's own colour rather than Nexus Global's. */
+#lincor{background:#1b2340}
+/* Wavy top/bottom edge, driven by js/main.js: id="lincorWavePath" (see the
+   hidden clipPath defs right before this section in about.html) starts as
+   a plain rectangle and only gains a wave while #lincor is still sliding
+   into place in the .stack scroll effect; it flattens back to a straight
+   edge once the section is fully settled at the top of the viewport. */
+#lincor{clip-path:url(#lincorWaveClip)}
 
 /* Network & Markets */
 #footprint.stack{z-index:2}

@@ -247,6 +247,51 @@
     }
   }
 
+  // Lincor section: wavy top/bottom edge that straightens once the section is
+  // settled. #lincor is a .stack card (position:sticky + z-index, see styles.css)
+  // that slides up over #capabilities as the page scrolls - its own top edge IS
+  // that seam. Its clip-path (id="lincorWaveClip" in about.html) starts as a
+  // wave with amplitude tied to how far the section still has to travel: full
+  // amplitude while its top is still down at the bottom of the viewport (just
+  // arriving), shrinking to a flat rectangle once that top edge reaches 0 (fully
+  // settled/stuck). Coordinates are in objectBoundingBox units (0-1), so the
+  // path never needs the section's actual pixel size.
+  var lincorPath = document.getElementById('lincorWavePath');
+  var lincorSection = document.getElementById('lincor');
+  if (lincorPath && lincorSection) {
+    if (reduceMotion) {
+      lincorPath.setAttribute('d', 'M0,0 L1,0 L1,1 L0,1 Z');
+    } else {
+      var buildWaveD = function(amp, phase, freq, n){
+        var top = [], bottom = [];
+        for (var i = 0; i <= n; i++) {
+          var x = i / n;
+          var s = Math.sin(2 * Math.PI * freq * x + phase);
+          top.push(x.toFixed(4) + ',' + (amp + amp * s).toFixed(4));
+        }
+        for (var j = n; j >= 0; j--) {
+          var xb = j / n;
+          var sb = Math.sin(2 * Math.PI * freq * xb + phase);
+          bottom.push(xb.toFixed(4) + ',' + (1 - amp - amp * sb).toFixed(4));
+        }
+        return 'M' + top.join('L') + 'L' + bottom.join('L') + 'Z';
+      };
+      var lincorTicking = false;
+      var updateLincorWave = function(){
+        var vh = window.innerHeight || 800;
+        var rectTop = lincorSection.getBoundingClientRect().top;
+        var settled = 1 - Math.min(Math.max(rectTop / vh, 0), 1);   // 0 arriving -> 1 settled
+        var amp = 0.028 * (1 - settled);
+        var phase = (1 - settled) * 1.2;
+        lincorPath.setAttribute('d', buildWaveD(amp, phase, 2, 24));
+        lincorTicking = false;
+      };
+      window.addEventListener('scroll', function(){ if(!lincorTicking){ requestAnimationFrame(updateLincorWave); lincorTicking = true; } }, { passive: true });
+      window.addEventListener('resize', updateLincorWave);
+      updateLincorWave();
+    }
+  }
+
   // General enquiry form: static site, no backend, builds a pre-filled mailto: link.
   var enquiryForm = document.getElementById('enquiryForm');
   if (enquiryForm) {
