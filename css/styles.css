@@ -1,29 +1,49 @@
-/* Nexus Global, design tokens (platinum + ink black only, no third hue, no gradients) */
+/* Nexus Global, design tokens.
+   Palette: platinum canvas, Pine Shadow dark surfaces, Ink Black type, and
+   Forest Grove as the one brand hue. No gradients as decoration.
+
+   FOREST GROVE IS A THREE-STEP RAMP, and which step you use is not a matter of
+   taste — it's a contrast requirement. The core green fails WCAG AA as text on
+   BOTH of our backgrounds (4.06:1 on platinum, 3.03:1 on Pine Shadow, against a
+   4.5:1 bar), so it is a SURFACE/FILL colour only. When green has to be text or
+   a fine stroke, use the step matched to what sits behind it:
+     --accent-deep   on light surfaces   6.66:1 on platinum      AA
+     --accent        fills and surfaces  4.82:1 vs white text    AA
+     --accent-light  on dark surfaces    5.41:1 on Pine Shadow   AA
+   Reaching for --accent as a text colour is the one mistake this ramp exists to
+   prevent. */
 :root{
-  --ink:#0a0a0a;
+  --ink:#1c1c1e;
   --platinum:#ededed;
-  --ink-04:rgba(10,10,10,.04);
-  --ink-06:rgba(10,10,10,.06);
-  --ink-10:rgba(10,10,10,.10);
-  --ink-18:rgba(10,10,10,.18);
-  --ink-30:rgba(10,10,10,.30);
-  --ink-40:rgba(10,10,10,.40);
-  --ink-55:rgba(10,10,10,.55);
-  --ink-70:rgba(10,10,10,.70);
-  --ink-85:rgba(10,10,10,.85);
+  --pine:#1c2b27;
+  --graphite:#303033;
+  --slate:#676768;
+  --smoke:#bfbfbf;
+  --ink-04:rgba(28,28,30,.04);
+  --ink-06:rgba(28,28,30,.06);
+  --ink-10:rgba(28,28,30,.10);
+  --ink-18:rgba(28,28,30,.18);
+  --ink-30:rgba(28,28,30,.30);
+  --ink-40:rgba(28,28,30,.40);
+  --ink-55:rgba(28,28,30,.55);
+  --ink-70:rgba(28,28,30,.70);
+  --ink-85:rgba(28,28,30,.85);
   --plat-06:rgba(237,237,237,.06);
   --plat-10:rgba(237,237,237,.10);
+  --plat-12:rgba(237,237,237,.12);
   --plat-18:rgba(237,237,237,.18);
   --plat-30:rgba(237,237,237,.30);
   --plat-40:rgba(237,237,237,.40);
   --plat-55:rgba(237,237,237,.55);
   --plat-70:rgba(237,237,237,.70);
   --plat-85:rgba(237,237,237,.85);
-  --ink-rgb:10,10,10;
+  --ink-rgb:28,28,30;
   --plat-rgb:237,237,237;
-  --accent:#660007;
-  --accent-rgb:102,0,7;
-  --accent-glow-rgb:255,42,58;
+  --pine-rgb:28,43,39;
+  --accent:#0b835c;
+  --accent-deep:#075c40;
+  --accent-light:#12b37d;
+  --accent-rgb:11,131,92;
   --noise-svg:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   --ease:cubic-bezier(.2,.65,.25,1);
   --container:1240px;
@@ -45,44 +65,79 @@ img,svg{max-width:100%;display:block}
 button{font-family:inherit;cursor:pointer}
 a{color:inherit;text-decoration:none}
 
+/* Brand green on the two interactions every page shares. The focus ring switches
+   to the lighter step on dark surfaces, where the core accent would only just
+   scrape the 3:1 minimum for non-text UI. */
+::selection{background:var(--accent);color:var(--platinum)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.page--dark :focus-visible,.nav.dark :focus-visible{outline-color:var(--accent-light)}
+
 /* Skip link */
 .skip-link{position:absolute;top:-40px;left:8px;background:var(--ink);color:var(--platinum);padding:8px 16px;border-radius:0 0 8px 8px;font-family:var(--font-label);font-size:12px;font-weight:500;z-index:1000;transition:top .2s}
 .skip-link:focus{top:0}
 
-/* Nav, floating pill: the whole bar is one rounded, inset capsule rather than an
-   edge-to-edge translucent strip, echoing the brutalist floating-pill nav language. */
-.nav{position:fixed;top:16px;left:16px;right:16px;z-index:50;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:16px 30px;border-radius:999px;background:var(--platinum);border:1px solid var(--ink-10);transition:background .35s var(--ease),color .35s var(--ease),border-color .35s var(--ease);color:var(--ink)}
-.nav.dark{background:var(--ink);color:var(--platinum);border-color:var(--plat-18)}
-.nav__brand{display:inline-flex;align-items:center;gap:10px;font-family:var(--font-label);font-weight:500;font-size:12px;letter-spacing:.06em}
-.nav__logo{position:relative;width:26px;height:26px}
-.nav__logo-img{position:absolute;inset:0;width:26px;height:26px;display:block;transition:opacity .35s var(--ease)}
+/* Nav: the BAR is transparent and does nothing but position three things. The
+   frosted capsule is .nav__links itself, so the globe and the full-bleed image
+   sections read through the entire width of the header instead of being cut off
+   by an opaque strip. Logo mark left, capsule centred, menu button right.
+   The capsule TINTS TO MATCH the section behind it rather than contrasting with
+   it — main.js toggles .dark from whichever section is in view, and the two
+   stacked favicons already cross-fade on that same signal, so the mark adapts
+   with no extra JS.
+   Columns are assigned EXPLICITLY (grid-column 1/2/3) rather than relying on
+   source order: .nav__links goes display:none under 1080px, and with implicit
+   placement the menu button would slide into the vacated middle column instead
+   of staying pinned right. */
+.nav{position:fixed;top:16px;left:16px;right:16px;z-index:50;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;transition:color .35s var(--ease);color:var(--ink)}
+.nav.dark{color:var(--platinum)}
+.nav__brand{grid-column:1;justify-self:start;display:inline-flex;align-items:center}
+.nav__logo{position:relative;width:34px;height:34px}
+.nav__logo-img{position:absolute;inset:0;width:34px;height:34px;display:block;transition:opacity .35s var(--ease)}
 .nav__logo-img--on-dark{opacity:0}
 .nav.dark .nav__logo-img--on-light{opacity:0}
 .nav.dark .nav__logo-img--on-dark{opacity:1}
-.nav__links{position:relative;justify-self:center;display:flex;align-items:center;gap:2px}
-.nav__indicator{position:absolute;top:0;left:0;width:0;border-radius:999px;background:var(--ink);transition:transform .35s var(--ease),width .35s var(--ease),background .35s var(--ease);z-index:0;pointer-events:none}
-.nav.dark .nav__indicator{background:var(--platinum)}
+
+/* The glass capsule. The low-alpha tint sits UNDER the blur deliberately, so the
+   pill still reads as a capsule where backdrop-filter is unsupported or disabled
+   (older Safari compositing a blur over a WebGL canvas is the real-world case)
+   instead of disappearing into the background entirely. */
+.nav__links{grid-column:2;position:relative;justify-self:center;display:flex;align-items:center;gap:2px;padding:7px 9px;border-radius:999px;background:var(--ink-06);border:1px solid var(--ink-10);backdrop-filter:blur(20px) saturate(140%);-webkit-backdrop-filter:blur(20px) saturate(140%);transition:background .35s var(--ease),border-color .35s var(--ease)}
+.nav.dark .nav__links{background:var(--plat-10);border-color:var(--plat-18)}
+/* Active pill is Forest Grove in BOTH contexts — it's the brand's active state,
+   not a tonal inversion of the surface. Platinum on it measures 4.82:1, which is
+   AA for these 11px labels. */
+.nav__indicator{position:absolute;top:0;left:0;width:0;border-radius:999px;background:var(--accent);transition:transform .35s var(--ease),width .35s var(--ease);z-index:0;pointer-events:none}
 .nav__links a{position:relative;z-index:1;padding:8px 15px;font-family:var(--font-label);font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;border-radius:999px;color:inherit;opacity:.62;transition:opacity .25s var(--ease),color .25s var(--ease);white-space:nowrap}
 .nav__links a:hover{opacity:1}
-.nav__links a.active,.nav__links a.pill-active{color:var(--platinum);opacity:1}
-.nav.dark .nav__links a.active,.nav.dark .nav__links a.pill-active{color:var(--ink)}
-.nav__right{justify-self:end;font-family:var(--font-label);font-size:10px;font-weight:500;letter-spacing:.10em;text-transform:uppercase;opacity:.7;display:flex;align-items:center;gap:12px}
-.nav__menu-btn{display:none;background:transparent;border:1px solid currentColor;border-radius:999px;padding:8px 15px;font-family:var(--font-label);font-size:10px;font-weight:500;letter-spacing:.10em;text-transform:uppercase;color:inherit;transition:border-color .25s var(--ease),color .25s var(--ease)}
+.nav__links a.active,.nav__links a.pill-active,.nav.dark .nav__links a.active,.nav.dark .nav__links a.pill-active{color:var(--platinum);opacity:1}
+
+.nav__menu-btn{grid-column:3;justify-self:end;display:none;background:transparent;border:1px solid currentColor;border-radius:999px;padding:8px 15px;font-family:var(--font-label);font-size:10px;font-weight:500;letter-spacing:.10em;text-transform:uppercase;color:inherit;transition:border-color .25s var(--ease),color .25s var(--ease)}
 .nav__menu-btn:hover,.nav__menu-btn:active{border-color:var(--accent);color:var(--accent)}
-.nav__menu{position:fixed;top:var(--nav-h);left:0;right:0;z-index:49;background:var(--platinum);border-radius:0 0 32px 32px;display:none;padding:12px var(--pad) 24px;max-height:calc(100vh - var(--nav-h));overflow-y:auto}
+.nav.dark .nav__menu-btn:hover,.nav.dark .nav__menu-btn:active{border-color:var(--accent-light);color:var(--accent-light)}
+
+/* Mobile dropdown. Sits BELOW the floating bar rather than flush to the viewport
+   top, so it needs the bar's own 16px inset plus clearance added to --nav-h
+   (which main.js measures as the bar's height alone). It also takes the same
+   tonal switch as the capsule — left on platinum it flashed as a bright panel
+   over the dark globe. Targeted as a SIBLING of .nav, which is what it is in the
+   markup, not a descendant. */
+.nav__menu{position:fixed;top:calc(var(--nav-h) + 28px);left:16px;right:16px;z-index:49;background:var(--platinum);border:1px solid var(--ink-10);border-radius:24px;display:none;padding:12px 24px 20px;max-height:calc(100vh - var(--nav-h) - 44px);overflow-y:auto}
+.nav.dark ~ .nav__menu{background:var(--pine);color:var(--platinum);border-color:var(--plat-18)}
 .nav__menu.open{display:block}
 .nav__menu a{display:block;padding:14px 0;border-bottom:var(--hairline);font-weight:500;font-size:15px}
+.nav.dark ~ .nav__menu a{border-bottom-color:var(--plat-18)}
 .nav__menu a:last-child{border-bottom:none}
 
-/* Scroll progress */
-.scroll-progress{position:fixed;top:0;left:0;height:2px;width:0%;background:var(--ink);z-index:51;pointer-events:none;transition:background .35s var(--ease)}
+/* Scroll progress — Forest Grove in both contexts. The bar is a filled surface,
+   not text, so the core accent is the correct step of the ramp here. */
+.scroll-progress{position:fixed;top:0;left:0;height:2px;width:0%;background:var(--accent);z-index:51;pointer-events:none;transition:background .35s var(--ease)}
 .scroll-progress::before{content:"";position:fixed;top:0;left:0;right:0;height:1px;background:var(--ink-10);z-index:50}
 .scroll-progress.dark::before{background:var(--plat-18)}
-.scroll-progress.dark{background:var(--platinum)}
+.scroll-progress.dark{background:var(--accent)}
 
 /* Page layout */
 .page{min-height:100vh;padding:120px var(--pad) 96px;position:relative;z-index:1;display:flex;flex-direction:column;border-bottom:var(--hairline);background:var(--platinum);color:var(--ink)}
-.page--dark{background:var(--ink);color:var(--platinum);border-bottom-color:var(--plat-10)}
+.page--dark{background:var(--pine);color:var(--platinum);border-bottom-color:var(--plat-10)}
 .page--tight{min-height:auto}
 .page__inner{max-width:var(--container);margin:0 auto;width:100%;flex:1;display:flex;flex-direction:column;position:relative;z-index:1}
 
@@ -106,36 +161,6 @@ a{color:inherit;text-decoration:none}
 .motif path,.motif circle,.motif ellipse{fill:none;stroke:var(--ink-10);stroke-width:1}
 .page--dark .motif path,.page--dark .motif circle,.page--dark .motif ellipse{stroke:var(--plat-12)}
 
-/* Pin-stripe scroll line (Home only): a single #660007 line threaded through
-   the intro→value→network→cta sections, choreographed by js/pin-stripe.js.
-   Each chapter is a direct child of its own <section> (a sibling of
-   .page__inner, not nested inside it) so it spans full section width and
-   sits at z-index:0 — behind .page__inner's z-index:1 content — using the
-   existing stacking/pin system for "disappears behind the card" and "rides
-   the seam as the next panel slides up" for free, rather than the script
-   having to fake those with manual opacity/position math. Reveal itself
-   (stroke-dasharray/dashoffset for the SVG chapters, width/opacity for the
-   plain-bar chapters) is scroll-scrubbed in JS; the shapes below are
-   authored once as percentage-viewBox paths so they scale with the section
-   responsively without per-frame recomputation. */
-.pin-stripe-svg{position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;overflow:visible}
-.pin-stripe-path{fill:none;stroke:var(--accent);stroke-width:.25;stroke-linecap:round;stroke-linejoin:round}
-/* Butt cap (no round bump) at the shared end where the two spill paths
-   meet the main path's own end — avoids stacking three round caps on top
-   of each other at one point, which reads as a small blob at the joint. */
-.pin-stripe-path--butt{stroke-linecap:butt}
-.pin-stripe-bar{position:absolute;left:0;height:4px;background:var(--accent);pointer-events:none;z-index:0}
-/* Lives inside #teasers, pinned to ITS OWN top edge — so as #teasers
-   physically slides up over #network-teaser (normal free-scroll, not a
-   captured segment), this rides along for free instead of trying to
-   animate a position that would have to be recomputed every frame. */
-.pin-stripe-bar--seam{top:0;width:100%;opacity:0;transition:opacity .3s var(--ease)}
-.pin-stripe-bar--seam.is-visible{opacity:1}
-.pin-stripe-bar--cta{bottom:0;width:0%;transition:width 1.3s var(--ease)}
-.pin-stripe-bar--cta.is-filling{width:100%}
-@media (prefers-reduced-motion: reduce){
-  .pin-stripe-bar--cta{transition:none}
-}
 .page__foot{max-width:var(--container);margin:32px auto 0;width:100%;display:flex;justify-content:space-between;align-items:center;gap:16px;font-family:var(--font-label);font-size:10.5px;letter-spacing:.10em;text-transform:uppercase;padding-top:18px;border-top:var(--hairline)}
 .page--dark .page__foot{border-top-color:var(--plat-10)}
 .page__foot-l{font-weight:600}
@@ -144,8 +169,11 @@ a{color:inherit;text-decoration:none}
 /* Typography */
 /* Section titles (eyebrows/kickers and the hero label pills): sentence case, italic,
    no letter-spacing tracking, that's a treatment for uppercase caps, not mixed case. */
-.eyebrow{font-family:var(--font-label);font-size:11px;letter-spacing:.01em;font-style:italic;font-weight:500;color:var(--ink-55)}
-.page--dark .eyebrow{color:var(--plat-55)}
+/* Eyebrows carry the brand green. At 11px these are small text, so each context
+   takes the ramp step that clears 4.5:1 against what's behind it — never the core
+   --accent, which would fail on both surfaces. */
+.eyebrow{font-family:var(--font-label);font-size:11px;letter-spacing:.01em;font-style:italic;font-weight:500;color:var(--accent-deep)}
+.page--dark .eyebrow{color:var(--accent-light)}
 .label-pill{display:inline-flex;align-items:center;gap:8px;border:1px solid currentColor;border-radius:999px;padding:9px 18px;font-family:var(--font-label);font-size:11px;font-weight:500;letter-spacing:.01em;font-style:italic}
 .label-pill .dot{width:6px;height:6px;border-radius:50%;background:currentColor}
 /* One typeface, Archivo, everywhere. Hierarchy comes from weight and italic, not
@@ -171,18 +199,31 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
 .reveal-d3{transition-delay:.16s}
 .reveal-d4{transition-delay:.24s}
 .reveal-d5{transition-delay:.32s}
-/* #stats sits inside the custom scroll-gated hero sequence, where any extra
-   motion is one more variable in an already-delicate transition — its content
-   just fades in place (no 24px slide-up) rather than sharing the site-wide
-   reveal transform. */
-#stats .reveal{transform:none}
-#stats .reveal.in{transform:none}
 
-.line-reveal{display:block;overflow:hidden}
-.line-reveal>span{display:inline-block;transform:translateY(115%);transition:transform .8s var(--ease)}
+/* Masked line reveal. overflow:hidden IS the mask, but at display leading (1.0
+   here, 1.02 on the page heroes) the line box is shorter than the font's
+   descender depth, so g/p/y were being sliced clean off — visible on "Trading
+   Company" and on the About/Network hero headlines. The padding adds room inside
+   the mask and the equal negative margin takes it back out of the layout, so
+   descenders survive without loosening the leading.
+   The inner span's start offset is 130%, not 115%: it has to clear the now-taller
+   mask box (span height + .16em), and 115% would leave a hairline of the glyph
+   showing before the reveal begins. */
+.line-reveal{display:block;overflow:hidden;padding-bottom:.16em;margin-bottom:-.16em}
+.line-reveal>span{display:inline-block;transform:translateY(130%);transition:transform .8s var(--ease)}
 .reveal.in .line-reveal>span{transform:translateY(0)}
 .reveal.in .line-reveal.line-reveal-d2>span{transition-delay:.1s}
 .reveal.in .line-reveal.line-reveal-d3>span{transition-delay:.2s}
+
+@media (prefers-reduced-motion: reduce){
+  /* Show revealed content outright instead of animating it in. This has to set
+     the END state, not merely transition:none — .reveal starts at opacity 0 and
+     .line-reveal's inner span starts translated fully out of its mask, so
+     removing the transition alone would leave both permanently invisible, which
+     is a far worse outcome than the motion it was meant to avoid. */
+  .reveal,.reveal.in{opacity:1;transform:none;transition:none}
+  .line-reveal>span,.reveal.in .line-reveal>span{transform:none;transition:none}
+}
 
 /* Cursor-spotlight glow */
 .spotlight{position:relative;overflow:hidden}
@@ -199,11 +240,18 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
    :hover pairs with one extra class at most, so ties are broken by source
    order, not by piling on selector specificity. */
 .btn-pill{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:999px;padding:13px 24px;font-family:var(--font-label);font-size:12px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:background .25s var(--ease),color .25s var(--ease),border-color .25s var(--ease),transform .2s var(--ease);text-decoration:none;border:1px solid transparent;white-space:nowrap}
-.btn-pill--fill{background:var(--ink);color:var(--platinum);border-color:var(--ink)}
-.page--dark .btn-pill--fill{background:var(--platinum);color:var(--ink);border-color:var(--platinum)}
+/* The primary filled button is Forest Grove in BOTH light and dark contexts —
+   it's the brand's action colour, so it shouldn't invert with the surface the way
+   a neutral button would. That's also why the old .page--dark override is gone.
+   Platinum on --accent is 4.82:1, and on --accent-deep 7.9:1, both AA. */
+.btn-pill--fill{background:var(--accent);color:var(--platinum);border-color:var(--accent)}
 .btn-pill--ghost{background:transparent;border-color:var(--ink-30);color:var(--ink)}
 .page--dark .btn-pill--ghost{border-color:var(--plat-30);color:var(--platinum)}
 .btn-pill:hover,.btn-pill:active{background:var(--accent);color:var(--platinum);border-color:var(--accent)}
+/* A green button hovering to the same green would be a dead state, so the filled
+   variant deepens instead. Must stay AFTER the generic hover above: equal
+   specificity (0,2,0), so source order is what decides it. */
+.btn-pill--fill:hover,.btn-pill--fill:active{background:var(--accent-deep);border-color:var(--accent-deep)}
 .btn-pill:active{transform:scale(.97)}
 
 .arrow-btn{width:42px;height:42px;border-radius:50%;border:1.5px solid currentColor;background:transparent;display:grid;place-items:center;color:inherit;transition:transform .25s var(--ease),background .3s var(--ease),border-color .3s var(--ease)}
@@ -222,8 +270,13 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
 .hero-au-page{overflow:hidden;padding-bottom:0}
 .hero-au{position:relative;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;width:100%;padding-top:clamp(16px,5vh,64px);text-align:center}
 .hero-au__content{position:relative;z-index:3;display:flex;flex-direction:column;align-items:center;max-width:900px;margin:0 auto}
-.hero-au__eyebrow{font-family:var(--font-label);font-size:12px;font-weight:500;letter-spacing:.01em;font-style:italic;color:var(--plat-55);margin:0 0 26px}
-.hero-au__h{display:flex;flex-direction:column;align-items:center;gap:.02em;font-family:var(--font-display);font-weight:900;font-size:clamp(44px,6.6vw,92px);line-height:1.02;letter-spacing:-0.02em;color:var(--platinum);margin:0 0 24px}
+/* The brand name IS the hero display type now, so it takes the largest size on
+   the site and the two kinetic lines carry one word each — NEXUS in from the
+   left, GLOBAL in from the right, meeting to form the name. The old small italic
+   eyebrow that used to read "Nexus Global" is gone: it would be repeating the
+   headline directly above it. */
+.hero-au__h{display:flex;flex-direction:column;align-items:center;gap:.02em;font-family:var(--font-display);font-weight:900;font-size:clamp(48px,8.6vw,124px);line-height:.98;letter-spacing:-0.03em;color:var(--platinum);margin:0 0 18px;text-transform:uppercase}
+.hero-au__tagline{font-family:var(--font-display);font-weight:600;font-size:clamp(17px,2.1vw,26px);line-height:1.25;letter-spacing:-0.01em;color:var(--platinum);margin:0 0 20px}
 .kinetic-line{display:block;white-space:nowrap;will-change:transform}
 .kinetic-line__inner{display:inline-block;will-change:transform}
 .kinetic-line--r .kinetic-line__inner{transition-delay:.08s}
@@ -236,13 +289,9 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
 .hero-au__actions{margin-top:36px;display:flex;gap:12px;justify-content:center}
 .hero-au__glow{position:absolute;left:50%;bottom:0;transform:translate(-50%,30%);width:min(820px,110vw);height:min(560px,64vh);z-index:0;pointer-events:none;background:radial-gradient(ellipse at center,rgba(237,237,237,.14),rgba(237,237,237,0) 66%)}
 /* Fixed full-viewport particle stage, hero + stats sit transparently over it */
-.globe-stage{position:fixed;inset:0;z-index:0;pointer-events:none;background:var(--ink)}
+.globe-stage{position:fixed;inset:0;z-index:0;pointer-events:none;background:var(--pine)}
 .globe-stage canvas{display:block;width:100%;height:100%}
 #cover.hero-au-page{background:transparent}
-/* Second pinned home panel: the globe stays assembled behind it (transparent
-   background reveals the fixed globe-stage), matching the hero's treatment,
-   until the scroll-gate explosion fires after this panel is left. */
-#stats.stack{background:transparent}
 
 /* Stacked-panel scroll (site-wide): on every page, each section sticks at the top of
    the viewport and holds there until the next section (higher z-index) scrolls up to
@@ -264,12 +313,19 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
 .stack{position:sticky;top:var(--pin-top,0)}
 #cover.stack{z-index:1}
 
-/* Home */
-#stats.stack{z-index:2}
-#value-teaser.stack{z-index:3}
-#network-teaser.stack{z-index:4}
-#teasers.stack{z-index:5}
-#cta.stack{z-index:6}
+/* Home.
+   NOTE these are GLOBAL id selectors, grouped by page in comments only — the CSS
+   itself isn't page-scoped. Reusing an id another page already claims silently
+   applies that page's z-index here and corrupts the stacking order. #capabilities
+   (About), #contact (Contact) and #values (About) are therefore all off-limits as
+   homepage section ids. Check with:
+     grep -oE '^#[a-z-]+\.stack' css/styles.css
+   before adding a section. */
+#statement.stack{z-index:2}
+#advantage.stack{z-index:3}
+#network.stack{z-index:4}
+#about.stack{z-index:5}
+#contact-cta.stack{z-index:6}
 
 /* About */
 #story.stack{z-index:2}
@@ -349,17 +405,17 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
 
 /* Interactive gradient + noise, adapted from the
    interactive-gradient-glassmorphism-with-noise reference: flowing
-   greyscale bands plus a grain layer, kept to ink/platinum only for now
-   (the --accent/--accent-glow-rgb tokens above are defined but
-   deliberately unused here — the accent colour is being introduced
-   elsewhere, at a later stage, not in this effect). The dominant band
+   greyscale bands plus a grain layer, deliberately kept achromatic — the
+   brand green is placed on deliberate, readable elements (eyebrows, icons,
+   fills, active states), not smeared through an ambient sweep where it
+   would tint every card and dilute the association. The dominant band
    matches each page's own background (platinum-dominant on light pages,
    ink-dominant on .page--dark) so the sweep reads as a native sheen on
    that surface rather than fighting it; the opposite tone appears only
    as a lower-alpha second band for contrast/definition, not as an equal
    partner.
    Scoped to .spotlight generally (not just .card) so it also covers the
-   teaser-card links, the hero-feature stat/list panels, and the
+   hero-feature stat/list panels and the
    process__step blocks — every one of those already carries .spotlight
    for the pre-existing cursor-glow ::after, so tagging along on that
    class picks up main.js's mousemove tracking too, for free.
@@ -441,34 +497,6 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
   .card--compact p{font-size:11.5px;line-height:1.4}
 }
 
-/* #stats sits inside the scroll-gated hero sequence: while gated, vertical page
-   scroll is locked, so its content must reliably fit within one viewport — cards
-   stack vertically on narrow screens (the site's normal grid-3 collapse), so
-   everything else has to shrink to leave room. The real constraint is viewport
-   HEIGHT, not width, so the tightening below is height-driven; the width query
-   only handles the card grid's own column collapse. */
-#stats{padding-bottom:32px}
-.stats-inner{padding-top:clamp(120px,calc(50vh - 120px),380px)}
-.stats-h{margin:8px 0 16px;font-size:clamp(24px,3vw,36px)}
-
-@media(max-width:820px){
-  #stats .card--compact{padding:12px 16px;gap:2px}
-  #stats .card--compact h3{font-size:13px}
-  #stats .card--compact p{font-size:11.5px;line-height:1.35}
-  #stats .grid-3{gap:8px}
-}
-@media(max-height:760px){
-  #stats{padding-top:70px;padding-bottom:14px}
-  .stats-inner{padding-top:clamp(40px,calc(30vh - 40px),220px)}
-  .stats-h{margin:2px 0 8px;font-size:clamp(19px,2.6vw,30px)}
-  #stats .eyebrow{margin:0}
-}
-@media(max-height:760px) and (max-width:820px){
-  #stats .card--compact{padding:8px 14px;gap:0}
-  #stats .card--compact h3{font-size:12px}
-  #stats .card--compact p{font-size:10.5px;line-height:1.3}
-  #stats .grid-3{gap:6px}
-}
 .card__num{width:36px;height:36px;border-radius:50%;border:1px solid var(--ink-30);display:grid;place-items:center;font-family:var(--font-label);font-size:12px;font-weight:500;flex-shrink:0}
 .page--dark .card__num{border-color:var(--plat-30)}
 .card h3,.card h4{font-size:19px;letter-spacing:-0.01em;line-height:1.25}
@@ -484,14 +512,62 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
 @media(max-width:980px){.grid-3{grid-template-columns:1fr 1fr}.grid-4{grid-template-columns:1fr 1fr}}
 @media(max-width:640px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr}}
 
-/* Teaser cards (home) */
-.teaser-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:8px}
-.teaser-card{border:none;border-radius:var(--radius-card);padding:32px 28px 34px;display:flex;flex-direction:column;gap:16px;text-decoration:none;color:inherit;background:var(--ink-04);transition:background .3s var(--ease)}
-.teaser-card:hover{background:var(--ink-10)}
-.teaser-card h3{font-size:21px;letter-spacing:-0.01em}
-.teaser-card p{font-family:var(--font-body);font-size:14px;line-height:1.55;color:var(--ink-70);margin:0}
-.teaser-card__top{display:flex;justify-content:space-between;align-items:center}
-@media(max-width:880px){.teaser-grid{grid-template-columns:1fr}}
+
+/* ── Homepage: image-led sections ───────────────────────────────────────────
+   Full-viewport photographic panels. Deliberately NOT a variant of .image-bleed:
+   that component is a short band that punctuates a text-heavy section, whereas
+   this replaces the section's entire surface, so it gets its own component
+   rather than a modifier that would have to undo most of the original.
+   Sits at z-index 0 as a sibling of .page__inner (z-index 1), the same
+   arrangement .motif already uses, so it slots into the existing stacking and
+   sticky panel system without any new machinery. */
+.image-panel{position:absolute;inset:0;z-index:0;overflow:hidden;background:var(--pine)}
+.image-panel__img{width:100%;height:100%;object-fit:cover;display:block}
+/* The darkening veil is load-bearing, not styling: platinum type over an
+   arbitrary photograph is not reliably legible, and the eyebrow's --accent-light
+   needs a predictable surface to keep its contrast ratio against.
+   TWO WEIGHTINGS, because the content isn't in the same place in every section.
+   A single symmetric wash can't serve both: it either starves the left-hand text
+   columns of contrast where a photo happens to be bright, or drowns the
+   photograph everywhere to protect them. So the veil follows the type.
+   Default is centre-weighted, for the centred statement sections. */
+.image-panel::after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse 78% 58% at 50% 50%,rgba(var(--pine-rgb),.90) 0%,rgba(var(--pine-rgb),.76) 55%,rgba(var(--pine-rgb),.66) 100%)}
+/* Left-weighted, for sections whose copy sits in a left-hand column: darkest
+   under the text, opening up towards the right so the photograph still reads. */
+.image-panel--left::after{background:linear-gradient(100deg,rgba(var(--pine-rgb),.95) 0%,rgba(var(--pine-rgb),.88) 38%,rgba(var(--pine-rgb),.60) 74%,rgba(var(--pine-rgb),.52) 100%)}
+
+/* Centred statement band. The type IS the section: no supporting paragraph, no
+   image, nothing competing. Pairs with .line-reveal for the masked slide-up. */
+.statement{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.statement__h{font-family:var(--font-display);font-weight:900;font-size:clamp(40px,8vw,104px);line-height:1.0;letter-spacing:-0.03em;max-width:20ch;margin:0}
+/* The signature word. Section 2 ONLY — colouring a word in every headline turns
+   a deliberate emphasis into a tic and devalues the one that matters. */
+.statement__accent{color:var(--accent-deep)}
+.page--dark .statement__h{color:var(--platinum)}
+.page--dark .statement__accent{color:var(--accent-light)}
+.statement--md .statement__h{font-size:clamp(31px,5.2vw,64px);max-width:24ch}
+.statement__actions{margin-top:36px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+
+/* Advantage pills (section 3): a green-bordered capsule labelling each column,
+   with its supporting copy beneath. */
+.advantage-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:30px;margin-top:36px}
+.advantage{display:flex;flex-direction:column;align-items:flex-start;gap:15px}
+.advantage p{font-family:var(--font-body);font-size:14.5px;line-height:1.62;color:var(--plat-70);margin:0}
+.info-pill{display:inline-flex;align-items:center;gap:9px;padding:11px 19px;border:1px solid var(--accent);border-radius:999px;background:rgba(var(--accent-rgb),.12);color:var(--platinum);font-family:var(--font-label);font-size:12px;font-weight:500;letter-spacing:.02em}
+.info-pill::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--accent-light);flex-shrink:0}
+@media(max-width:880px){.advantage-grid{grid-template-columns:1fr;gap:24px;margin-top:28px}}
+
+/* Market silhouettes (section 4). Outlines are generated offline from the same
+   world-atlas topojson the particle globe fetches, so the geography on the page
+   agrees with the globe's, and inlined as static paths — inline rather than <img>
+   because the stroke has to inherit the brand green from CSS, which an <img>
+   cannot do. */
+.market-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:38px;margin-top:34px}
+.market{display:flex;flex-direction:column;gap:16px}
+.market h3{font-size:21px;letter-spacing:-0.01em;color:var(--platinum)}
+.market p{font-family:var(--font-body);font-size:14px;line-height:1.62;color:var(--plat-70);margin:0}
+.map-outline{width:clamp(68px,6.6vw,98px);height:auto;fill:none;stroke:var(--accent-light);stroke-width:1.2;stroke-linejoin:round;overflow:visible}
+@media(max-width:880px){.market-grid{grid-template-columns:1fr;gap:30px;margin-top:26px}.map-outline{width:76px}}
 
 /* Values / principles grid */
 .principles{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
@@ -523,7 +599,7 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
 .page--dark .faq-item p{color:var(--plat-70)}
 
 /* Punchline callout */
-.punchline{margin:44px 0 0;padding:44px 40px;border-radius:var(--radius-card-lg);background:var(--ink);color:var(--platinum);text-align:center}
+.punchline{margin:44px 0 0;padding:44px 40px;border-radius:var(--radius-card-lg);background:var(--pine);color:var(--platinum);text-align:center}
 /* Long-form editorial quote: stays on the body grotesk rather than the condensed
    display face, sentence-length text in tight uppercase caps stops being legible. */
 .punchline__main{font-family:var(--font-body);font-size:clamp(19px,2.2vw,26px);font-weight:500;letter-spacing:-0.01em;line-height:1.4;margin:0 auto;max-width:64ch}
@@ -559,13 +635,14 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
    in-flow content" paint tier, which sits BELOW any positioned z-index:0
    layer regardless of DOM order. Without this, the globe stage's opaque
    ink background silently paints over the footer on Home only. */
-.site-footer{position:relative;z-index:1;background:var(--ink);color:var(--plat-55);padding:56px var(--pad) 96px;padding-right:calc(var(--pad) + 64px);font-family:var(--font-label);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;display:flex;justify-content:space-between;align-items:center;gap:24px;flex-wrap:wrap}
+.site-footer{position:relative;z-index:1;background:var(--pine);color:var(--plat-55);padding:56px var(--pad) 96px;padding-right:calc(var(--pad) + 64px);font-family:var(--font-label);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;display:flex;justify-content:space-between;align-items:center;gap:24px;flex-wrap:wrap}
 .site-footer a{color:var(--plat-55);transition:color .2s}
-.site-footer a:hover{color:var(--platinum)}
+.site-footer a:hover{color:var(--accent-light)}
 
-/* Monoline card icons */
-.card__icon{width:30px;height:30px;stroke:currentColor;fill:none;stroke-width:1.4;color:var(--ink);display:block}
-.page--dark .card__icon{color:var(--platinum)}
+/* Monoline card icons, stroked in the brand green at the step that suits the
+   surface behind them. */
+.card__icon{width:30px;height:30px;stroke:currentColor;fill:none;stroke-width:1.4;color:var(--accent-deep);display:block}
+.page--dark .card__icon{color:var(--accent-light)}
 
 /* Pull quote, an editorial beat that breaks up long narrative. Italic is the hierarchy
    device here, the one place on the page that isn't upright Archivo. */
@@ -586,8 +663,9 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
 .process__body p{font-family:var(--font-body);font-size:14px;line-height:1.6;color:var(--ink-70);margin:0;max-width:60ch}
 .page--dark .process__body p{color:var(--plat-70)}
 
-/* Responsive nav */
-@media(max-width:1080px){.nav__links{display:none}.nav__menu-btn{display:inline-flex}.nav{grid-template-columns:1fr 1fr auto;gap:8px}}
-@media(max-width:780px){.nav__right span{display:none}.nav{grid-template-columns:1fr auto;gap:8px}}
+/* Responsive nav. No grid-template override needed any more: the three children
+   are explicitly placed in columns 1/2/3, so hiding the capsule leaves the menu
+   button pinned right on its own. */
+@media(max-width:1080px){.nav__links{display:none}.nav__menu-btn{display:inline-flex}}
 
 @media print{.nav,.nav__menu{display:none}}

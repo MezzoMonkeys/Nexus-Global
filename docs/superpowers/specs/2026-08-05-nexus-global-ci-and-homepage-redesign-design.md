@@ -333,3 +333,25 @@ Before the work is considered complete:
 7. Mobile behaviour holds at the 1080px and 780px breakpoints: links pill hides, menu button appears and opens.
 8. `prefers-reduced-motion: reduce` suppresses the hero fly-in and the statement slide-up.
 9. Every green text instance sits on the background its variant was chosen for.
+
+---
+
+## 14. Implementation notes — where this diverged from the spec
+
+Recorded after the fact so the document matches what was actually built.
+
+**D1 refined: the explosion survives, as a scroll-scrubbed effect.** `releaseY` turned out not to be gate machinery. It was also the scroll-normalisation constant for `uSphereY` — the globe's glide from bottom-anchored to top-anchored — so deleting it outright would have broken the globe's scroll motion entirely. And because the explode-then-disperse behaviour lives in the *shader* (`uMorph` 0→0.45 expands, 0.45→1 disperses), driving that uniform from scroll position instead of a timer keeps the burst while removing the hijacking. Net result is better than retiring it: the explosion is now scrubbed by the user and fully reversible, where before it was a fixed 1.15s animation played behind a scroll lock. `SCROLL_SPAN` replaces `releaseY`, measured from viewport height.
+
+**Section 5's image is generated, not `our-story.jpg`.** That file is 900×1350 — portrait, and only 900px wide. As a full-viewport landscape background it would have been heavily cropped and visibly soft on any wide display. A landscape placeholder was generated instead. `our-story.jpg` is untouched and still used by the About page.
+
+**Two overlay weightings, not one.** A single symmetric veil could not serve both the left-aligned sections (3, 4) and the centred statements (5, 6): it either starved the text columns of contrast where a photograph happened to be bright, or drowned the photograph everywhere to protect them. `.image-panel` is centre-weighted; `.image-panel--left` is left-weighted.
+
+**`.line-reveal` was clipping descenders — a pre-existing bug, now fixed.** `overflow:hidden` creates the mask, but at display leading the line box is shorter than the font's descender depth, so g/p/y were sliced off. This was already affecting the About and Network hero headlines before this work. Fixed globally with padding inside the mask and an equal negative margin outside it, plus the inner span's start offset raised from 115% to 130% to clear the taller box.
+
+**Reduced motion was not handled for `.reveal` / `.line-reveal`.** Also pre-existing: only the hero fly-in was guarded. Added a `prefers-reduced-motion: reduce` block that sets the *end* state rather than merely removing the transition — without that, content starting at `opacity:0` and translated out of its mask would have been left permanently invisible.
+
+**`darkSections` deleted rather than updated.** Every dark section on every page already carries `.page--dark`, so the hard-coded id list beside that class check was pure duplication, and exactly the kind of thing that goes stale on a rename and silently leaves the nav the wrong colour.
+
+**Verification performed.** All four pages rendered in headless Chromium at 1440×900 and 390×844: zero console errors, zero failed requests. Twenty behavioural assertions passed, covering scroll never locking, wheel gestures actually scrolling, globe canvas presence, reversibility, reduced-motion visibility, and the nav's tonal switch and Forest Grove active pill on all four pages.
+
+**Left for the client's decision.** `IMAGERY/OurNetwork.png` (2.2MB) and `IMAGERY/ourStory.png` (3.0MB) are referenced nowhere and duplicate the `.jpg` versions — 5.2MB of dead weight, deliberately not deleted since they may be intentional source assets.

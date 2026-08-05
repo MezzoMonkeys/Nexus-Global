@@ -187,126 +187,30 @@
       var angle = -1.15;
       var t0 = 0;
 
-      // ── Scroll GATE ────────────────────────────────────────────────────────
-      // Phase 1 ('pre'): free, native scroll from the hero into the second pinned
-      // panel — the globe stays assembled and visible through both, nothing is
-      // locked yet. Phase 2 ('armed'): once that second panel has fully taken over
-      // the viewport, scroll locks and the next downward gesture fires a timed
-      // explosion (page stays put); when it finishes, scrolling releases and the
-      // page continues normally. Returning all the way back to the hero re-arms
-      // phase 1 so the sequence can replay.
-      var EXPLODE_SECONDS = 1.15;
-      var STATS_VH = 1;   // fallback viewport-heights, used only if #stats can't be measured
-      var gate = reduceMotion ? 'done' : 'pre';   // 'pre' | 'armed' | 'playing' | 'done'
-      var morph = 0, explodeStart = 0;
-
-      // The gate boundary is measured from the real DOM (#stats' actual document
-      // position) rather than assumed to be exactly one viewport-height — #cover's
-      // rendered height can shift slightly (e.g. once a swapped-in webfont settles
-      // with different metrics), and an assumed boundary would drift out of sync
-      // with where the section visually actually starts, reading as a layout jump.
-      var releaseY = (window.innerHeight || 800) * STATS_VH;
-      function computeReleaseY(){
-        var statsEl = document.getElementById('stats');
-        if (statsEl) releaseY = statsEl.getBoundingClientRect().top + (window.pageYOffset || 0);
-      }
-      computeReleaseY();
-      window.addEventListener('resize', computeReleaseY);
-      if (document.fonts && document.fonts.ready) { document.fonts.ready.then(computeReleaseY); }
-
-      function lockScroll(){ document.documentElement.style.overflow = 'hidden'; document.body.style.overflow = 'hidden'; }
-      function unlockScroll(){ document.documentElement.style.overflow = ''; document.body.style.overflow = ''; }
-
-      function armGate(){
-        if (gate !== 'pre') return;
-        gate = 'armed';
-        lockScroll();
-      }
-      // Scrolling back up while armed releases the lock and returns to free-scroll,
-      // rather than swallowing the gesture with nowhere to go — otherwise a user who
-      // changes their mind and tries to scroll back to the hero reads as stuck/glitchy.
-      function unarmGate(){
-        if (gate !== 'armed') return;
-        gate = 'pre';
-        unlockScroll();
-      }
-      function fireExplode(){
-        if (gate !== 'armed') return;
-        if (mat.uniforms.uAssemble.value < 0.9) return;   // ignore until the globe has assembled
-        gate = 'playing';
-        explodeStart = 0;
-      }
-      function releaseGate(){ gate = 'done'; unlockScroll(); }
-
-      if (!reduceMotion){
-        // Phase 1: let the page scroll natively from the hero into the second panel;
-        // once its top has reached the top of the viewport, arm — at WHATEVER scrollY
-        // that happens to be, no forced snap. #stats holds its own stuck/visible phase
-        // for roughly a further viewport-height beyond this point (its own height),
-        // so a scroll gesture landing a little past the boundary is still safely
-        // within that window; forcing scrollY back to an exact value here previously
-        // showed up as a visible downward jump whenever a gesture overshot it.
-        window.addEventListener('scroll', function(){
-          if (gate !== 'pre') return;
-          computeReleaseY();   // keep the boundary in sync with the live DOM on every
-                                // tick, not just at load/resize/fonts-ready — if anything
-                                // else nudges #stats' position mid-scroll, the threshold
-                                // never goes stale against it.
-          var y = window.pageYOffset || 0;
-          if (y >= releaseY - 2){
-            armGate();
-          }
-        }, { passive: true });
-        // Phase 2: while gated, scroll inputs are swallowed; a downward intent fires the
-        // explosion, an upward intent un-arms and returns control to free scroll. Blocked
-        // for 'playing' too, not just 'armed' — otherwise a fast/continuous gesture that
-        // keeps sending events through the explosion itself could leak scroll through.
-        window.addEventListener('wheel', function(e){
-          if (gate !== 'armed' && gate !== 'playing') return;
-          if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;   // let horizontal gestures (the card-row scroller) through
-          e.preventDefault();
-          if (gate === 'armed'){ if (e.deltaY > 0) fireExplode(); else if (e.deltaY < 0) unarmGate(); }
-        }, { passive: false });
-        var tX = null, tY = null, tAxis = null;
-        window.addEventListener('touchstart', function(e){
-          if (gate !== 'armed') return;
-          tX = e.touches[0].clientX; tY = e.touches[0].clientY; tAxis = null;
-        }, { passive: true });
-        window.addEventListener('touchmove', function(e){
-          if (gate !== 'armed' && gate !== 'playing') return;
-          if (tX == null || tY == null) return;
-          var dx = tX - e.touches[0].clientX, dy = tY - e.touches[0].clientY;
-          if (!tAxis) tAxis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
-          if (tAxis === 'x') return;   // let horizontal swipes (the card-row scroller) through
-          e.preventDefault();
-          if (gate === 'armed'){ if (dy > 12) fireExplode(); else if (dy < -12) unarmGate(); }
-        }, { passive: false });
-        window.addEventListener('keydown', function(e){
-          if (gate === 'playing' && (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === ' ' || e.key === 'Spacebar' || e.key === 'ArrowUp' || e.key === 'PageUp')){ e.preventDefault(); return; }
-          if (gate !== 'armed') return;
-          if (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === ' ' || e.key === 'Spacebar'){ e.preventDefault(); fireExplode(); }
-          else if (e.key === 'ArrowUp' || e.key === 'PageUp'){ e.preventDefault(); unarmGate(); }
-        });
-        // Re-arm once scrolled all the way back to the very top. Release happens at
-        // releaseY, not near the top, so there's no risk of this instantly re-firing
-        // right after a release the way it would if release and reset shared the same
-        // position — safe to reset unconditionally, no "has the user gone far enough
-        // away first" guard needed. Resets to 'pre' (free scroll), not straight back to
-        // 'armed', so the hero-to-second-panel scroll replays too.
-        window.addEventListener('scroll', function(){
-          if (gate !== 'done') return;
-          if ((window.pageYOffset || 0) <= 1) gate = 'pre';
-        }, { passive: true });
-        // Accessibility: never trap the skip-link.
-        var skip = document.querySelector('.skip-link');
-        if (skip) skip.addEventListener('click', releaseGate);
-      }
-
-      function easeInOut(p){ return p < 0.5 ? 4*p*p*p : 1 - Math.pow(-2*p + 2, 3) / 2; }
+      // ── Scroll response ──────────────────────────────────────────────────────
+      // Entirely position-driven. Scroll is never locked and no wheel/touch/key
+      // event is ever swallowed — the page scrolls normally at all times.
+      //
+      // The explosion is still here. It lives in the shader, where uMorph runs a
+      // two-stage exit: 0 -> 0.45 EXPANDS the globe outward (that's the burst) and
+      // 0.45 -> 1 disperses the dots off-screen. Driving that uniform from scroll
+      // position rather than from a timer means the burst is scrubbed by the user
+      // and is fully reversible — scrolling back up reassembles the globe — where
+      // before it was a fixed 1.15s animation played behind a scroll lock.
+      //
+      // SCROLL_SPAN is the distance the whole exit plays out over, and it also
+      // normalises the vertical reposition below, so it is the denominator for the
+      // entire effect rather than incidental bookkeeping. It used to be measured
+      // from #stats' document position; that section no longer exists, and the hero
+      // it belonged to is exactly one viewport tall, so viewport height is the
+      // direct equivalent. Recomputed on resize because innerHeight shifts as
+      // mobile browser chrome collapses.
+      var scrollSpan = window.innerHeight || 800;
+      window.addEventListener('resize', function(){ scrollSpan = window.innerHeight || 800; });
 
       function animate(ts){
         var vh = window.innerHeight || 800;
-        if ((window.pageYOffset || 0) < vh * 2.4 || gate !== 'done') {
+        if ((window.pageYOffset || 0) < vh * 2.4) {
           if (!t0) t0 = ts;
           var el = (ts - t0) / 1000;
           var a = reduceMotion ? 1 : Math.min(el / ASSEMBLE_SECONDS, 1);
@@ -314,31 +218,14 @@
           if (!reduceMotion){
             mat.uniforms.uTime.value = el;
             mat.uniforms.uAssemble.value = a;
-            if (gate === 'playing'){
-              if (!explodeStart) explodeStart = ts;
-              var p = Math.min((ts - explodeStart) / (EXPLODE_SECONDS * 1000), 1);
-              morph = easeInOut(p);
-              if (p >= 1) releaseGate();
-            } else if (gate === 'armed' || gate === 'pre'){
-              // Always stay fully assembled through 'pre'/'armed', on every pass —
-              // whether this is the very first approach or a replay after a prior
-              // explosion, position on the way TO the boundary should never itself
-              // disperse the globe. Only reaching 'done' does that (below).
-              morph += (0 - morph) * 0.09;
-              if (morph < 0.001) morph = 0;
-            } else {
-              // 'done': scroll-scrubbed and fully reversible — dispersed at/past the
-              // release boundary, reforming progressively as the user scrolls back up
-              // above it, same as any other scroll-driven parallax. Only the explosion
-              // itself (above) is time-based; this is purely position-driven.
-              var y2 = window.pageYOffset || 0;
-              morph = y2 >= releaseY ? 1 : Math.min(Math.max(1 - (releaseY - y2) / releaseY, 0), 1);
-            }
-            mat.uniforms.uMorph.value = morph;
-            // Scroll-scrubbed reposition: as the page scrolls natively from the hero
-            // into the second panel, the globe glides from bottom-anchored to
-            // top-anchored in lockstep with the scroll, same as any normal parallax.
-            var scrubP = Math.min(Math.max((window.pageYOffset || 0) / releaseY, 0), 1);
+            var scrubP = Math.min(Math.max((window.pageYOffset || 0) / scrollSpan, 0), 1);
+            // Scaled by the assemble progress so a scroll during the 1.9s intro
+            // can't have the dots forming and flying apart at the same time. The
+            // old scroll gate got this for free by pinning morph to 0 until it
+            // released; multiplying by `a` is the equivalent without the lock, and
+            // eases in rather than popping. easeOutCubic puts `a` past 0.87 within
+            // half the intro, so the suppression window is brief.
+            mat.uniforms.uMorph.value = scrubP * a;
             mat.uniforms.uSphereY.value = SPHERE_Y_HOME1 + (SPHERE_Y_HOME2 - SPHERE_Y_HOME1) * scrubP;
             angle += (a < 1) ? (0.006 * (1 - a) + 0.0016) : 0.0016;   // spins faster while assembling (spiral)
             mat.uniforms.uMouse.value.lerp(targetMouse, 0.14);

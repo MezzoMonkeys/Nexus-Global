@@ -6,7 +6,6 @@
   const navLinksEl = document.getElementById('navLinks');
   const scrollProgress = document.getElementById('scrollProgress');
   const revealEls = document.querySelectorAll('.reveal');
-  const darkSections = ['cover','contact','cta'];
   const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   var setNavHeight = function(){
@@ -24,15 +23,15 @@
   // last screenful has come into view, and only that final frame holds while
   // the next section covers it. Sections that already fit in one viewport get
   // 0 (unchanged, locks immediately as before).
-  // #stats and #cover are excluded: both sit inside particle-globe.js's custom
-  // scroll-gate sequence, which depends on their exact sticky position staying
-  // stable and predictable throughout. This function re-measures on 'load',
-  // which can fire after a web-font swap shifts a section's rendered height by
-  // a pixel or two — if that recalculation lands while #cover is actively
-  // stuck mid-transition into #stats, its offset would change out from under
-  // it and read as a jump. Neither section needs an offset anyway (both are
-  // designed to fit one viewport), so excluding them costs nothing.
-  var stackEls = document.querySelectorAll('.stack:not(#stats):not(#cover)');
+  // #cover is excluded: it's the globe hero, whose scroll response in
+  // particle-globe.js normalises against a one-viewport span and so depends on
+  // its sticky position staying stable and predictable. This function re-measures
+  // on 'load', which can fire after a web-font swap shifts a section's rendered
+  // height by a pixel or two — if that recalculation landed while #cover was
+  // actively stuck mid-transition, its offset would change out from under it and
+  // read as a jump. #cover is designed to fit one viewport and needs no offset
+  // anyway, so excluding it costs nothing.
+  var stackEls = document.querySelectorAll('.stack:not(#cover)');
   var updateStackOffsets = function(){
     var vh = window.innerHeight || 800;
     stackEls.forEach(function(el){
@@ -72,13 +71,17 @@
     revealEls.forEach(function(el){ io.observe(el); });
   }
 
-  // Dark/light nav toggle, keyed off whichever section is in view
+  // Dark/light nav toggle, keyed off whichever section is in view.
+  // .page--dark is the single source of truth: every dark section on every page
+  // carries it, so the hard-coded id list that used to sit alongside this check
+  // was pure duplication — and a list of ids is exactly the thing that goes stale
+  // when sections get renamed, silently leaving the nav the wrong colour.
   var sections = document.querySelectorAll('.page[id]');
   if (sections.length && 'IntersectionObserver' in window) {
     var sectionObserver = new IntersectionObserver(function(entries){
       entries.forEach(function(e){
         if(!e.isIntersecting) return;
-        var isDark = darkSections.includes(e.target.id) || e.target.classList.contains('page--dark');
+        var isDark = e.target.classList.contains('page--dark');
         nav.classList.toggle('dark', isDark);
         if (scrollProgress) scrollProgress.classList.toggle('dark', isDark);
       });
@@ -209,7 +212,7 @@
     requestAnimationFrame(function(){ requestAnimationFrame(function(){ heroAu.classList.add('hero-loaded'); }); });
     var hL = heroAu.querySelector('.kinetic-line--l');
     var hR = heroAu.querySelector('.kinetic-line--r');
-    var hRest = heroAu.querySelectorAll('.hero-au__eyebrow, .hero-au__sub');
+    var hRest = heroAu.querySelectorAll('.hero-au__tagline, .hero-au__sub');
     hRest.forEach(function(el){ el.style.transition = 'none'; });   // instant, 1:1 with scroll, no chase/lag
     var hGlow = heroAu.querySelector('.hero-au__glow');
     if (hGlow) hGlow.style.transition = 'none';
