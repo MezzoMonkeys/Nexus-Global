@@ -276,7 +276,7 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
    left, GLOBAL in from the right, meeting to form the name. The old small italic
    eyebrow that used to read "Nexus Global" is gone: it would be repeating the
    headline directly above it. */
-.hero-au__h{display:flex;flex-direction:column;align-items:center;gap:.02em;font-family:var(--font-display);font-weight:900;font-size:clamp(58px,11vw,168px);line-height:.98;letter-spacing:-0.03em;color:var(--platinum);margin:0;text-transform:uppercase}
+.hero-au__h{display:flex;flex-direction:column;align-items:center;gap:.02em;font-family:var(--font-display);font-weight:900;font-size:clamp(48px,8.6vw,124px);line-height:.98;letter-spacing:-0.03em;color:var(--platinum);margin:0;text-transform:uppercase}
 .kinetic-line{display:block;white-space:nowrap;will-change:transform}
 .kinetic-line__inner{display:inline-block;will-change:transform}
 .kinetic-line--r .kinetic-line__inner{transition-delay:.08s}
