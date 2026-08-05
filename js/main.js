@@ -141,34 +141,6 @@
     }
   }
 
-  // Count-up numbers: animate from 0 to the printed value once scrolled into view.
-  var countEls = document.querySelectorAll('.stat-strip__num, .count-up');
-  if (countEls.length && 'IntersectionObserver' in window) {
-    var countObserver = new IntersectionObserver(function(entries){
-      entries.forEach(function(entry){
-        if (!entry.isIntersecting) return;
-        animateStatNumber(entry.target);
-        countObserver.unobserve(entry.target);
-      });
-    }, { threshold: 0.4 });
-    countEls.forEach(function(el){ countObserver.observe(el); });
-  }
-
-  function animateStatNumber(el){
-    var match = el.textContent.trim().match(/^([^\d]*)([\d,]+)(.*)$/);
-    if (!match) return;
-    var prefix = match[1], target = parseInt(match[2].replace(/,/g, ''), 10), suffix = match[3];
-    var duration = parseInt(el.dataset.duration, 10) || 1400, start = null;
-    function step(ts){
-      if (!start) start = ts;
-      var progress = Math.min((ts - start) / duration, 1);
-      var eased = 1 - Math.pow(1 - progress, 3);
-      el.textContent = prefix + Math.round(target * eased).toLocaleString() + suffix;
-      if (progress < 1) requestAnimationFrame(step);
-    }
-    requestAnimationFrame(step);
-  }
-
   // Cursor-spotlight glow
   var spotlightEls = document.querySelectorAll('.spotlight');
   spotlightEls.forEach(function(card){
@@ -300,11 +272,12 @@
       var name = enquiryForm.name.value.trim();
       var company = enquiryForm.company.value.trim();
       var email = enquiryForm.email.value.trim();
+      var phone = enquiryForm.phone ? enquiryForm.phone.value.trim() : '';
       var role = enquiryForm.role ? enquiryForm.role.value.trim() : '';
       var subject = enquiryForm.subject ? enquiryForm.subject.value.trim() : '';
       var message = enquiryForm.message.value.trim();
       var body = 'Name: ' + name + '\nCompany: ' + company + '\nEmail: ' + email
-        + (role ? '\nI am a: ' + role : '') + '\n\n' + message;
+        + (phone ? '\nPhone: ' + phone : '') + (role ? '\nI am a: ' + role : '') + '\n\n' + message;
       window.location.href = 'mailto:enquiries@nexusglobal.com'
         + '?subject=' + encodeURIComponent('Enquiry: ' + (subject || 'General Partnership'))
         + '&body=' + encodeURIComponent(body);

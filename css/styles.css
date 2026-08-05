@@ -138,21 +138,7 @@ a{color:inherit;text-decoration:none}
 /* Page layout */
 .page{min-height:100vh;padding:120px var(--pad) 96px;position:relative;z-index:1;display:flex;flex-direction:column;border-bottom:var(--hairline);background:var(--platinum);color:var(--ink)}
 .page--dark{background:var(--pine);color:var(--platinum);border-bottom-color:var(--plat-10)}
-.page--tight{min-height:auto}
 .page__inner{max-width:var(--container);margin:0 auto;width:100%;flex:1;display:flex;flex-direction:column;position:relative;z-index:1}
-
-/* Full-bleed image placeholder: a sibling of .page__inner (not nested in
-   it) so the classic viewport-breakout trick has an unconstrained
-   positioning ancestor to work from — .page itself is position:relative
-   but spans the full section width (only .page__inner is capped by
-   --container), so centering on ITS box lines up with centering on the
-   viewport. Kept short (not a full hero) since it's meant to punctuate a
-   text-heavy section, not replace it. */
-.image-bleed{position:relative;left:50%;right:50%;width:100vw;margin:32px -50vw 0;height:clamp(200px,26vw,340px);overflow:hidden;display:flex;align-items:center;justify-content:center;background:var(--ink-06);border-top:var(--hairline);border-bottom:var(--hairline)}
-.page--dark .image-bleed{background:var(--plat-06);border-top:var(--hairline-dark);border-bottom:var(--hairline-dark)}
-.image-bleed__img{width:100%;height:100%;object-fit:cover;display:block}
-.image-bleed__label{font-family:var(--font-label);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-40)}
-.page--dark .image-bleed__label{color:var(--plat-40)}
 
 /* Decorative arc/ring motif: thin hairline circles, ambient background only,
    never competes with copy. Shared across About/Network per the wireframes. */
@@ -164,7 +150,6 @@ a{color:inherit;text-decoration:none}
 .page__foot{max-width:var(--container);margin:32px auto 0;width:100%;display:flex;justify-content:space-between;align-items:center;gap:16px;font-family:var(--font-label);font-size:10.5px;letter-spacing:.10em;text-transform:uppercase;padding-top:18px;border-top:var(--hairline)}
 .page--dark .page__foot{border-top-color:var(--plat-10)}
 .page__foot-l{font-weight:600}
-.page__foot-r{opacity:.75;font-weight:500}
 
 /* Typography */
 /* Section titles (eyebrows/kickers and the hero label pills): sentence case, italic,
@@ -185,7 +170,6 @@ a{color:inherit;text-decoration:none}
 h1,h2{margin:0;font-family:var(--font-display);font-weight:900;letter-spacing:-0.02em;line-height:1.02}
 h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01em;line-height:1.2}
 .display{font-size:clamp(48px,7.6vw,112px);line-height:1}
-.display--md{font-size:clamp(36px,5.4vw,72px);line-height:1.02}
 .display--sm{font-size:clamp(28px,3.6vw,48px);line-height:1.06}
 .lead{font-family:var(--font-body);font-size:18px;line-height:1.55;color:var(--ink);max-width:56ch}
 .page--dark .lead{color:var(--plat-85)}
@@ -214,7 +198,6 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
 .line-reveal>span{display:inline-block;transform:translateY(130%);transition:transform .8s var(--ease)}
 .reveal.in .line-reveal>span{transform:translateY(0)}
 .reveal.in .line-reveal.line-reveal-d2>span{transition-delay:.1s}
-.reveal.in .line-reveal.line-reveal-d3>span{transition-delay:.2s}
 
 @media (prefers-reduced-motion: reduce){
   /* Show revealed content outright instead of animating it in. This has to set
@@ -246,8 +229,6 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
    a neutral button would. That's also why the old .page--dark override is gone.
    Platinum on --accent is 4.82:1, and on --accent-deep 7.9:1, both AA. */
 .btn-pill--fill{background:var(--accent);color:var(--platinum);border-color:var(--accent)}
-.btn-pill--ghost{background:transparent;border-color:var(--ink-30);color:var(--ink)}
-.page--dark .btn-pill--ghost{border-color:var(--plat-30);color:var(--platinum)}
 .btn-pill:hover,.btn-pill:active{background:var(--accent);color:var(--platinum);border-color:var(--accent)}
 /* A green button hovering to the same green would be a dead state, so the filled
    variant deepens instead. Must stay AFTER the generic hover above: equal
@@ -285,7 +266,6 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
   .hero-au:not(.hero-loaded) .kinetic-line--l .kinetic-line__inner{transform:translateX(-118vw)}
   .hero-au:not(.hero-loaded) .kinetic-line--r .kinetic-line__inner{transform:translateX(118vw)}
 }
-.hero-au__actions{margin-top:36px;display:flex;gap:12px;justify-content:center}
 .hero-au__glow{position:absolute;left:50%;bottom:0;transform:translate(-50%,30%);width:min(820px,110vw);height:min(560px,64vh);z-index:0;pointer-events:none;background:radial-gradient(ellipse at center,rgba(237,237,237,.14),rgba(237,237,237,0) 66%)}
 /* Fixed full-viewport particle stage, hero + stats sit transparently over it */
 .globe-stage{position:fixed;inset:0;z-index:0;pointer-events:none;background:var(--pine)}
@@ -354,11 +334,6 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
 .hero__pill{margin-bottom:28px;color:var(--platinum);border-color:var(--plat-55)}
 .hero__h{font-size:clamp(44px,7.2vw,108px);line-height:1.02;letter-spacing:-0.02em;color:var(--platinum);margin-bottom:20px}
 .hero__sub{font-size:18px;line-height:1.55;color:var(--plat-85);max-width:58ch;margin:0 auto}
-.hero__bullets{margin:40px 0 0;padding:0;list-style:none;display:flex;flex-wrap:wrap;justify-content:center;gap:10px;max-width:56ch}
-.hero__bullet{display:inline-flex;align-items:center;gap:9px;padding:11px 18px;border:1px solid var(--plat-18);border-radius:999px;background:var(--plat-06);color:var(--plat-85);font-family:var(--font-label);font-size:12px;font-weight:500;letter-spacing:.02em}
-.hero__bullet::before{content:"";width:5px;height:5px;border-radius:50%;background:var(--plat-55);flex-shrink:0}
-.hero__actions{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:36px}
-@media(max-width:680px){.hero__bullet{font-size:11px;padding:10px 15px}}
 
 /* Split hero, asymmetric layout for page covers other than the homepage: text left,
    a page-specific feature panel right, instead of every page repeating the same
@@ -370,15 +345,14 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
 .hero--split .hero__sub{margin:0;text-align:left}
 @media(max-width:900px){.hero--split{flex-direction:column;text-align:center}.hero--split .hero__col{align-items:center;text-align:center;max-width:100%}.hero--split .hero__sub{text-align:center}}
 
-/* Text-left/image-right content block (e.g. About's "Our story") — same
-   side-by-side shape as .hero--split but for plain body copy rather than
-   a hero pill+headline, so it doesn't force that component's own type
-   scale onto ordinary paragraphs. */
-.content-split{display:flex;align-items:flex-start;gap:56px;flex-wrap:wrap}
+/* Text-left/image-right content block (About's "Our story"). Text sits in
+   normal flow at its own max-width; the image is the full-bleed variant
+   below, not a shared flex row with the text — there's no plain side-by-
+   side rendering of this component any more, just the two independent
+   pieces. */
 .content-split__text{flex:1 1 420px;max-width:640px}
 .content-split__image{flex:0 1 380px;width:100%;max-width:380px;border-radius:var(--radius-card);overflow:hidden}
 .content-split__image img{width:100%;height:100%;object-fit:cover;display:block}
-@media(max-width:900px){.content-split{flex-direction:column}.content-split__image{max-width:420px;margin:0 auto}}
 
 /* Full-bleed variant: sits outside .page__inner (a sibling of it within the
    section) rather than sharing a flex row with the text, so it can ignore
@@ -406,17 +380,6 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
    visible tint on the image itself. */
 .content-split__image--bleed::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.4) 0,rgba(0,0,0,0) 110px);pointer-events:none}
 @media(max-width:900px){.content-split__image--bleed{position:static;left:auto;width:100%;height:70vh;margin-top:32px}}
-
-/* Stat strip, individual rounded cards rather than a divided strip */
-.stat-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin:44px 0 28px}
-.stat-strip__cell{padding:28px 26px;border-radius:var(--radius-card);background:var(--ink-04)}
-.stat-strip__num{font-family:var(--font-display);font-weight:900;font-size:clamp(32px,4.4vw,52px);letter-spacing:-0.01em;line-height:1;color:var(--ink);margin-bottom:10px;font-variant-numeric:tabular-nums}
-.stat-strip__label{font-family:var(--font-label);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;font-weight:500;color:var(--ink-55);line-height:1.4}
-@media(max-width:880px){.stat-strip{grid-template-columns:1fr 1fr}}
-@media(max-width:540px){.stat-strip{grid-template-columns:1fr}}
-.page--dark .stat-strip__cell{background:var(--plat-06)}
-.page--dark .stat-strip__num{color:var(--platinum)}
-.page--dark .stat-strip__label{color:var(--plat-55)}
 
 /* Section headings inside pages */
 .section-head{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:40px;align-items:end;margin:36px 0 32px}
@@ -512,27 +475,9 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
   .spotlight::before{animation:none;transform:none;transition:opacity .4s var(--ease)}
 }
 
-/* Compact card variant: for panels where a locked/pinned scroll means overflow
-   content becomes unreachable, so everything must fit within one viewport. */
-.card--compact{padding:20px 22px;gap:8px}
-.card--compact .card__icon{width:22px;height:22px}
-.card--compact h3{font-size:16px}
-.card--compact p{font-size:13px;line-height:1.5}
-@media(max-height:760px){
-  .card--compact{padding:14px 18px;gap:4px}
-  .card--compact .card__icon{width:18px;height:18px}
-  .card--compact h3{font-size:14px}
-  .card--compact p{font-size:11.5px;line-height:1.4}
-}
-
-.card__num{width:36px;height:36px;border-radius:50%;border:1px solid var(--ink-30);display:grid;place-items:center;font-family:var(--font-label);font-size:12px;font-weight:500;flex-shrink:0}
-.page--dark .card__num{border-color:var(--plat-30)}
 .card h3,.card h4{font-size:19px;letter-spacing:-0.01em;line-height:1.25}
 .card p{font-family:var(--font-body);font-size:14px;line-height:1.6;color:var(--ink-70);margin:0}
 .page--dark .card p{color:var(--plat-70)}
-.card__pills{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 0;padding:0;list-style:none}
-.card__pill{display:inline-flex;align-items:center;padding:6px 14px;border:none;background:var(--ink-10);border-radius:999px;font-family:var(--font-label);font-size:10.5px;font-weight:500;color:var(--ink-70);letter-spacing:.02em}
-.page--dark .card__pill{background:var(--plat-10);color:var(--plat-70)}
 
 .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
 .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
@@ -542,10 +487,8 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
 
 
 /* ── Homepage: image-led sections ───────────────────────────────────────────
-   Full-viewport photographic panels. Deliberately NOT a variant of .image-bleed:
-   that component is a short band that punctuates a text-heavy section, whereas
-   this replaces the section's entire surface, so it gets its own component
-   rather than a modifier that would have to undo most of the original.
+   Full-viewport photographic panels, replacing the section's entire surface
+   rather than punctuating it.
    Sits at z-index 0 as a sibling of .page__inner (z-index 1), the same
    arrangement .motif already uses, so it slots into the existing stacking and
    sticky panel system without any new machinery. */
@@ -611,20 +554,6 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
 .map-outline{width:clamp(68px,6.6vw,98px);height:auto;fill:none;stroke:var(--accent-light);stroke-width:1.2;stroke-linejoin:round;overflow:visible}
 @media(max-width:880px){.market-grid{grid-template-columns:1fr;gap:30px;margin-top:26px}.map-outline{width:76px}}
 
-/* Values / principles grid */
-.principles{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
-.principle{border:none;border-radius:var(--radius-card);padding:26px 24px 28px;display:flex;flex-direction:column;gap:10px;background:var(--ink-04);transition:background .3s var(--ease)}
-.principle:hover{background:var(--ink-10)}
-.page--dark .principle{background:var(--plat-06)}
-.page--dark .principle:hover{background:var(--plat-10)}
-.principle__top{display:flex;align-items:center;gap:10px}
-.principle__num{width:26px;height:26px;border-radius:50%;background:var(--ink);color:var(--platinum);display:grid;place-items:center;font-family:var(--font-label);font-size:10px;font-weight:500;flex-shrink:0}
-.page--dark .principle__num{background:var(--platinum);color:var(--ink)}
-.principle h4{font-size:18px;margin:2px 0 4px}
-.principle p{font-family:var(--font-body);font-size:13.5px;color:var(--ink-70);line-height:1.55;margin:0}
-@media(max-width:980px){.principles{grid-template-columns:1fr 1fr}}
-@media(max-width:540px){.principles{grid-template-columns:1fr}}
-
 /* FAQ accordion, native <details>/<summary>: accessible and crawlable with no
    JS, content stays in the DOM (and searchable/quotable) whether expanded or
    not, which matters as much for AI answer engines as for users. */
@@ -639,13 +568,6 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
 .faq-item[open] summary::after{transform:rotate(45deg)}
 .faq-item p{margin:14px 0 0;font-family:var(--font-body);font-size:14.5px;line-height:1.65;color:var(--ink-70);max-width:68ch}
 .page--dark .faq-item p{color:var(--plat-70)}
-
-/* Punchline callout */
-.punchline{margin:44px 0 0;padding:44px 40px;border-radius:var(--radius-card-lg);background:var(--pine);color:var(--platinum);text-align:center}
-/* Long-form editorial quote: stays on the body grotesk rather than the condensed
-   display face, sentence-length text in tight uppercase caps stops being legible. */
-.punchline__main{font-family:var(--font-body);font-size:clamp(19px,2.2vw,26px);font-weight:500;letter-spacing:-0.01em;line-height:1.4;margin:0 auto;max-width:64ch}
-.punchline__sub{font-family:var(--font-body);font-size:14px;color:var(--plat-55);margin:14px auto 0;max-width:60ch}
 
 /* Contact / enquiry form */
 .contact-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:56px;flex:1}
@@ -690,9 +612,6 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
    device here, the one place on the page that isn't upright Archivo. */
 .pullquote{margin:40px 0;padding:0 0 0 24px;border-left:2px solid var(--ink-30);font-family:var(--font-body);font-style:italic;font-weight:500;font-size:clamp(22px,2.8vw,34px);line-height:1.35;letter-spacing:-0.01em;color:var(--ink);max-width:26ch}
 .page--dark .pullquote{border-left-color:var(--plat-30);color:var(--platinum)}
-
-/* Oversized editorial lead */
-.lead--xl{font-size:clamp(20px,2.4vw,28px);line-height:1.4;max-width:34ch}
 
 /* Numbered process steps, 2x2 card grid rather than a vertical stack */
 .process{display:grid;grid-template-columns:1fr 1fr;gap:16px}
