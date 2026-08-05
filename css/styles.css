@@ -535,18 +535,29 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
    under the text, opening up towards the right so the photograph still reads. */
 .image-panel--left::after{background:linear-gradient(100deg,rgba(var(--pine-rgb),.95) 0%,rgba(var(--pine-rgb),.88) 38%,rgba(var(--pine-rgb),.60) 74%,rgba(var(--pine-rgb),.52) 100%)}
 
-/* Centred statement band. Image, nothing competing. */
+/* Centred statement band. Image, nothing competing. The grain keeps the
+   surrounding empty space from reading as inert — the same achromatic
+   noise the .spotlight cards use, here on its own ::before rather than
+   blended into the section's own background: soft-light against a near-
+   white platinum base crushed the noise to a couple of imperceptible
+   levels, so this needs direct opacity control instead. z-index:0 keeps
+   it behind .page__inner (z-index:1) within #statement's own stacking
+   context, so it never sits over the text. */
 .statement{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+#statement::before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;background-image:var(--noise-svg);background-size:180px 180px;opacity:.28}
 .statement__h{font-family:var(--font-display);font-weight:900;font-size:clamp(34px,7vw,88px);line-height:1.0;letter-spacing:-0.03em;max-width:20ch;margin:0}
-/* The signature word. Section 2 ONLY — colouring a word in every headline turns
-   a deliberate emphasis into a tic and devalues the one that matters. */
+/* The signature line. Section 2 ONLY — colouring a phrase in every headline
+   turns a deliberate emphasis into a tic and devalues the one that matters.
+   Coloured as a whole line (not one word within it) so each line of the
+   headline reads as its own unit: the plain-black setup, then the accented
+   payoff, rather than a colour change splitting the second line in two. */
 .statement__accent{color:var(--accent-deep)}
 .page--dark .statement__h{color:var(--platinum)}
 .page--dark .statement__accent{color:var(--accent-light)}
 .statement--md .statement__h{font-size:clamp(31px,5.2vw,64px);max-width:24ch}
-/* Sized to actually carry weight next to the 88px headline — a caption-sized
-   line here read as an afterthought and left the band feeling unbalanced. */
-.statement__sub{font-family:var(--font-body);font-weight:400;font-size:clamp(17px,1.8vw,22px);line-height:1.65;letter-spacing:.01em;color:var(--ink-70);max-width:46ch;margin:28px auto 0}
+/* Sized and weighted to actually carry next to the 88px headline — a
+   caption-sized line here read as a footnote and left the band unbalanced. */
+.statement__sub{font-family:var(--font-body);font-weight:500;font-size:clamp(19px,2.1vw,26px);line-height:1.6;letter-spacing:.015em;color:var(--ink-70);max-width:44ch;margin:30px auto 0}
 .page--dark .statement__sub{color:var(--plat-70)}
 .statement__actions{margin-top:36px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
 
