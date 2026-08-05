@@ -370,6 +370,33 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
 .content-split__image img{width:100%;height:100%;object-fit:cover;display:block}
 @media(max-width:900px){.content-split{flex-direction:column}.content-split__image{max-width:420px;margin:0 auto}}
 
+/* Full-bleed variant: sits outside .page__inner (a sibling of it within the
+   section) rather than sharing a flex row with the text, so it can ignore
+   .page's own padding and .page__inner's max-width entirely. top/right/bottom
+   are relative to .page's padding box (position:relative on .page is the
+   containing block), which is exactly how .image-panel reaches full-section-
+   bleed elsewhere in this file - same mechanism, just confined to the right
+   half instead of the whole section.
+   left is NOT 50% - .page__inner only centres on the viewport once it's wide
+   enough to hit its own 1240px cap; below that it hugs the page's left
+   padding instead, and .content-split__text keeps a fixed 640px max-width
+   throughout. A flat 50% split overlaps that 640px column by a wide margin
+   at viewports where .page__inner isn't capped yet (measured ~120px of
+   overlap around 1024px). This re-derives .page__inner's own left edge
+   (its padding, plus the same centring math .page__inner uses once its
+   1240px cap engages) and adds the text's 640px plus a 56px gap, so the
+   image starts exactly where the text column ends at every width. */
+.content-split__image--bleed{position:absolute;top:0;right:0;bottom:0;left:calc(var(--pad) + max(0px,(100vw - 2 * var(--pad) - var(--container)) / 2) + 640px + 56px);flex:none;width:auto;max-width:none;border-radius:0;z-index:0}
+/* Short top scrim: the fixed nav's frosted pill sits over this image's own
+   top edge, and its backdrop-blur samples whatever's behind it - against a
+   bright sky with no tint (unlike .image-panel's sections, which are all
+   page--dark and already darkened), that leaves the nav's dark-on-light
+   text patchy right where the pill crosses the photo. Fades out well
+   before the photo's main subject, so it reads as nav-legibility, not a
+   visible tint on the image itself. */
+.content-split__image--bleed::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.4) 0,rgba(0,0,0,0) 110px);pointer-events:none}
+@media(max-width:900px){.content-split__image--bleed{position:static;left:auto;width:100%;height:70vh;margin-top:32px}}
+
 /* Stat strip, individual rounded cards rather than a divided strip */
 .stat-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin:44px 0 28px}
 .stat-strip__cell{padding:28px 26px;border-radius:var(--radius-card);background:var(--ink-04)}
