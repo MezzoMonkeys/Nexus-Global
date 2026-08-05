@@ -199,6 +199,7 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
 .reveal-d3{transition-delay:.16s}
 .reveal-d4{transition-delay:.24s}
 .reveal-d5{transition-delay:.32s}
+.reveal-ltr{transform:translateX(-64px)}
 
 /* Masked line reveal. overflow:hidden IS the mask, but at display leading (1.0
    here, 1.02 on the page heroes) the line box is shorter than the font's
@@ -275,8 +276,7 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
    left, GLOBAL in from the right, meeting to form the name. The old small italic
    eyebrow that used to read "Nexus Global" is gone: it would be repeating the
    headline directly above it. */
-.hero-au__h{display:flex;flex-direction:column;align-items:center;gap:.02em;font-family:var(--font-display);font-weight:900;font-size:clamp(48px,8.6vw,124px);line-height:.98;letter-spacing:-0.03em;color:var(--platinum);margin:0 0 18px;text-transform:uppercase}
-.hero-au__tagline{font-family:var(--font-display);font-weight:600;font-size:clamp(17px,2.1vw,26px);line-height:1.25;letter-spacing:-0.01em;color:var(--platinum);margin:0 0 20px}
+.hero-au__h{display:flex;flex-direction:column;align-items:center;gap:.02em;font-family:var(--font-display);font-weight:900;font-size:clamp(48px,8.6vw,124px);line-height:.98;letter-spacing:-0.03em;color:var(--platinum);margin:0;text-transform:uppercase}
 .kinetic-line{display:block;white-space:nowrap;will-change:transform}
 .kinetic-line__inner{display:inline-block;will-change:transform}
 .kinetic-line--r .kinetic-line__inner{transition-delay:.08s}
@@ -285,7 +285,6 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
   .hero-au:not(.hero-loaded) .kinetic-line--l .kinetic-line__inner{transform:translateX(-118vw)}
   .hero-au:not(.hero-loaded) .kinetic-line--r .kinetic-line__inner{transform:translateX(118vw)}
 }
-.hero-au__sub{font-family:var(--font-body);font-size:clamp(15px,1.4vw,19px);line-height:1.55;color:var(--plat-70);max-width:52ch;margin:0 auto}
 .hero-au__actions{margin-top:36px;display:flex;gap:12px;justify-content:center}
 .hero-au__glow{position:absolute;left:50%;bottom:0;transform:translate(-50%,30%);width:min(820px,110vw);height:min(560px,64vh);z-index:0;pointer-events:none;background:radial-gradient(ellipse at center,rgba(237,237,237,.14),rgba(237,237,237,0) 66%)}
 /* Fixed full-viewport particle stage, hero + stats sit transparently over it */
@@ -536,16 +535,19 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
    under the text, opening up towards the right so the photograph still reads. */
 .image-panel--left::after{background:linear-gradient(100deg,rgba(var(--pine-rgb),.95) 0%,rgba(var(--pine-rgb),.88) 38%,rgba(var(--pine-rgb),.60) 74%,rgba(var(--pine-rgb),.52) 100%)}
 
-/* Centred statement band. The type IS the section: no supporting paragraph, no
-   image, nothing competing. Pairs with .line-reveal for the masked slide-up. */
+/* Centred statement band. Image, nothing competing. */
 .statement{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
-.statement__h{font-family:var(--font-display);font-weight:900;font-size:clamp(40px,8vw,104px);line-height:1.0;letter-spacing:-0.03em;max-width:20ch;margin:0}
+/* Section 2 sits higher in the viewport rather than dead-centre, since it now
+   carries a supporting line beneath the headline. */
+#statement .statement{justify-content:flex-start;padding-top:clamp(48px,12vh,140px)}
+.statement__h{font-family:var(--font-display);font-weight:900;font-size:clamp(34px,7vw,88px);line-height:1.0;letter-spacing:-0.03em;max-width:20ch;margin:0}
 /* The signature word. Section 2 ONLY — colouring a word in every headline turns
    a deliberate emphasis into a tic and devalues the one that matters. */
 .statement__accent{color:var(--accent-deep)}
 .page--dark .statement__h{color:var(--platinum)}
 .page--dark .statement__accent{color:var(--accent-light)}
 .statement--md .statement__h{font-size:clamp(31px,5.2vw,64px);max-width:24ch}
+.statement__sub{font-family:var(--font-body);font-weight:400;font-size:clamp(14px,1.3vw,17px);line-height:1.6;letter-spacing:.01em;color:var(--ink-70);max-width:48ch;margin:20px auto 0}
 .statement__actions{margin-top:36px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
 
 /* Advantage pills (section 3): a green-bordered capsule labelling each column,

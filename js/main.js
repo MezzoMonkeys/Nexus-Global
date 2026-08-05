@@ -212,8 +212,6 @@
     requestAnimationFrame(function(){ requestAnimationFrame(function(){ heroAu.classList.add('hero-loaded'); }); });
     var hL = heroAu.querySelector('.kinetic-line--l');
     var hR = heroAu.querySelector('.kinetic-line--r');
-    var hRest = heroAu.querySelectorAll('.hero-au__tagline, .hero-au__sub');
-    hRest.forEach(function(el){ el.style.transition = 'none'; });   // instant, 1:1 with scroll, no chase/lag
     var hGlow = heroAu.querySelector('.hero-au__glow');
     if (hGlow) hGlow.style.transition = 'none';
     if (hL && hR && !reduceMotion) {
@@ -223,14 +221,6 @@
         var travel = window.innerWidth * 1.15;
         hL.style.transform = 'translateX(' + (p * travel).toFixed(1) + 'px)';   // exits right
         hR.style.transform = 'translateX(' + (-p * travel).toFixed(1) + 'px)';  // exits left
-        // The eyebrow/subhead don't fly off sideways like the kinetic headline;
-        // they scroll straight up and off, same direction the globe is
-        // travelling, so the panel is clear before the next section's own
-        // content slides up over it.
-        var exitY = -p * window.innerHeight * 1.1;
-        hRest.forEach(function(el){
-          el.style.transform = 'translateY(' + exitY.toFixed(1) + 'px)';
-        });
         // The ambient glow was positioned to sit under the globe in its hero
         // (bottom-anchored) position, but it's a static CSS gradient, not tied
         // to the globe's own scroll-scrubbed reposition — left alone it stays

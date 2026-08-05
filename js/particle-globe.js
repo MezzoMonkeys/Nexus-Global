@@ -21,7 +21,7 @@
     if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
     window.scrollTo(0, 0);
   }
-  var R = 2.0;
+  var R = 2.25;
   var GRID_STEP = 1.1;
   var SPHERE_Y_HOME1 = -2.8;    // hero: pushed down so it emerges from the bottom
   var SPHERE_Y_HOME2 = 2.0;     // second panel: pushed up so it crests off the top,
