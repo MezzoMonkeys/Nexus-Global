@@ -71,22 +71,33 @@
     revealEls.forEach(function(el){ io.observe(el); });
   }
 
-  // Dark/light nav toggle, keyed off whichever section is in view.
-  // .page--dark is the single source of truth: every dark section on every page
-  // carries it, so the hard-coded id list that used to sit alongside this check
-  // was pure duplication — and a list of ids is exactly the thing that goes stale
-  // when sections get renamed, silently leaving the nav the wrong colour.
+  // Dark/light nav toggle. .stack sections are position:sticky with z-index
+  // increasing in DOM order (see .stack in styles.css): earlier sections stay
+  // pinned full-screen behind later ones as those slide up to cover them, so
+  // at any scroll position several sections' bounding boxes overlap the
+  // viewport at once. IntersectionObserver's isIntersecting can't tell which
+  // one is actually painted on top in that situation — whichever entry's
+  // callback happened to fire last won, regardless of z-index, which is what
+  // let the nav pick the wrong section's colour and vanish against its own
+  // background. Instead, walk the sections in DOM order (== z-index order)
+  // and keep the last one whose top has scrolled up past the nav: a later
+  // section only visually covers earlier ones once it's slid that far up, so
+  // that's the one actually behind the nav right now.
   var sections = document.querySelectorAll('.page[id]');
-  if (sections.length && 'IntersectionObserver' in window) {
-    var sectionObserver = new IntersectionObserver(function(entries){
-      entries.forEach(function(e){
-        if(!e.isIntersecting) return;
-        var isDark = e.target.classList.contains('page--dark');
-        nav.classList.toggle('dark', isDark);
-        if (scrollProgress) scrollProgress.classList.toggle('dark', isDark);
+  if (sections.length) {
+    var updateNavTheme = function(){
+      var probeY = nav.getBoundingClientRect().bottom;
+      var front = sections[0];
+      sections.forEach(function(s){
+        if (s.getBoundingClientRect().top <= probeY) front = s;
       });
-    },{threshold:0.4});
-    sections.forEach(function(s){ sectionObserver.observe(s); });
+      var isDark = front.classList.contains('page--dark');
+      nav.classList.toggle('dark', isDark);
+      if (scrollProgress) scrollProgress.classList.toggle('dark', isDark);
+    };
+    window.addEventListener('scroll', updateNavTheme, { passive: true });
+    window.addEventListener('resize', updateNavTheme);
+    updateNavTheme();
   }
 
   // Scroll-progress bar

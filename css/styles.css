@@ -276,7 +276,7 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
    left, GLOBAL in from the right, meeting to form the name. The old small italic
    eyebrow that used to read "Nexus Global" is gone: it would be repeating the
    headline directly above it. */
-.hero-au__h{display:flex;flex-direction:column;align-items:center;gap:.02em;font-family:var(--font-display);font-weight:900;font-size:clamp(48px,8.6vw,124px);line-height:.98;letter-spacing:-0.03em;color:var(--platinum);margin:0;text-transform:uppercase}
+.hero-au__h{display:flex;flex-direction:column;align-items:center;gap:.02em;font-family:var(--font-display);font-weight:900;font-size:clamp(58px,11vw,168px);line-height:.98;letter-spacing:-0.03em;color:var(--platinum);margin:0;text-transform:uppercase}
 .kinetic-line{display:block;white-space:nowrap;will-change:transform}
 .kinetic-line__inner{display:inline-block;will-change:transform}
 .kinetic-line--r .kinetic-line__inner{transition-delay:.08s}
@@ -537,9 +537,6 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
 
 /* Centred statement band. Image, nothing competing. */
 .statement{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
-/* Section 2 sits higher in the viewport rather than dead-centre, since it now
-   carries a supporting line beneath the headline. */
-#statement .statement{justify-content:flex-start;padding-top:clamp(48px,12vh,140px)}
 .statement__h{font-family:var(--font-display);font-weight:900;font-size:clamp(34px,7vw,88px);line-height:1.0;letter-spacing:-0.03em;max-width:20ch;margin:0}
 /* The signature word. Section 2 ONLY — colouring a word in every headline turns
    a deliberate emphasis into a tic and devalues the one that matters. */
@@ -547,7 +544,10 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
 .page--dark .statement__h{color:var(--platinum)}
 .page--dark .statement__accent{color:var(--accent-light)}
 .statement--md .statement__h{font-size:clamp(31px,5.2vw,64px);max-width:24ch}
-.statement__sub{font-family:var(--font-body);font-weight:400;font-size:clamp(14px,1.3vw,17px);line-height:1.6;letter-spacing:.01em;color:var(--ink-70);max-width:48ch;margin:20px auto 0}
+/* Sized to actually carry weight next to the 88px headline — a caption-sized
+   line here read as an afterthought and left the band feeling unbalanced. */
+.statement__sub{font-family:var(--font-body);font-weight:400;font-size:clamp(17px,1.8vw,22px);line-height:1.65;letter-spacing:.01em;color:var(--ink-70);max-width:46ch;margin:28px auto 0}
+.page--dark .statement__sub{color:var(--plat-70)}
 .statement__actions{margin-top:36px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
 
 /* Advantage pills (section 3): a green-bordered capsule labelling each column,
