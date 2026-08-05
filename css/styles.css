@@ -358,15 +358,7 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
 .hero--split .hero__pill{margin-bottom:24px}
 .hero--split .hero__h{font-size:clamp(32px,4vw,52px);line-height:1.05;margin-bottom:20px}
 .hero--split .hero__sub{margin:0;text-align:left}
-.hero-feature{flex:0 0 320px;max-width:380px;width:100%;border-radius:var(--radius-card-lg);padding:36px 32px;background:var(--plat-06)}
-.hero-feature__kicker{font-family:var(--font-label);font-size:10.5px;letter-spacing:.01em;font-style:italic;color:var(--plat-55);margin:0 0 18px}
-.hero-feature--stat .hero-feature__num{font-family:var(--font-display);font-weight:900;font-size:clamp(46px,6.4vw,72px);letter-spacing:-0.01em;line-height:1;color:var(--platinum);margin-bottom:14px}
-.hero-feature--stat .hero-feature__label{font-family:var(--font-label);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--plat-55)}
-.hero-feature--list ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:14px}
-.hero-feature--list li{display:flex;align-items:center;font-family:var(--font-display);font-weight:700;font-size:20px;letter-spacing:0;color:var(--platinum);padding-bottom:14px;border-bottom:1px solid var(--plat-18)}
-.hero-feature--list li:last-child{border-bottom:none;padding-bottom:0}
-.hero-feature__icon{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.6;flex-shrink:0;margin-right:12px;color:var(--plat-55)}
-@media(max-width:900px){.hero--split{flex-direction:column;text-align:center}.hero--split .hero__col{align-items:center;text-align:center;max-width:100%}.hero--split .hero__sub{text-align:center}.hero-feature{flex:0 0 auto;max-width:420px}}
+@media(max-width:900px){.hero--split{flex-direction:column;text-align:center}.hero--split .hero__col{align-items:center;text-align:center;max-width:100%}.hero--split .hero__sub{text-align:center}}
 
 /* Text-left/image-right content block (e.g. About's "Our story") — same
    side-by-side shape as .hero--split but for plain body copy rather than
