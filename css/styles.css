@@ -341,8 +341,34 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
    with the same clamp() the text uses, instead of a fixed pixel size that
    would fall out of proportion on small screens. Extra line-height on
    .hero__h--editorial gives the tiles room to breathe against the lines
-   above/below them. */
-.hero__h--editorial{line-height:1.25}
+   above/below them.
+
+   The line breaks here are art-directed, not incidental, so each line is its
+   own block with white-space:nowrap. .editorial-photo is an inline-block, and
+   CSS permits a line break at an atomic inline's edges even with no
+   whitespace between it and the adjacent text - so without nowrap a tile can
+   always be orphaned onto a line of its own. nowrap forbids that outright,
+   which is what makes the three-line structure a guarantee rather than a
+   coincidence of the current text widths.
+
+   The font-size cap is lower than the base .hero__h 108px because the widest
+   line (the tile plus "relationships formed") rendered 1217px inside the
+   1240px container at that cap - under 2% of slack, which is well inside
+   normal cross-browser text-metric variance, so it overflowed and broke in
+   real browsers even though it fit in headless Chromium. 100px leaves ~113px
+   of slack instead. */
+.hero__h--editorial{line-height:1.25;font-size:clamp(44px,7.2vw,100px)}
+.editorial-line{display:block;white-space:nowrap}
+/* Below ~640px even the 44px floor cannot fit the longest line, so allow
+   wrapping rather than overflow the screen. Dropping the floor a little at the
+   same time keeps the tile on the same line as the word it belongs to - at
+   44px the tile plus "relationships" needs ~399px against 350px of usable
+   width on a 390px screen, which is what stranded the tile on a line of its
+   own. The line count is free to differ here; a stranded tile is not. */
+@media(max-width:640px){
+  .hero__h--editorial{font-size:clamp(34px,9vw,44px)}
+  .editorial-line{white-space:normal}
+}
 .editorial-photo{position:relative;display:inline-block;vertical-align:middle;height:.82em;width:1.15em;margin:0 .1em;border-radius:14px;overflow:hidden;transform:translateY(-.06em)}
 /* Two stacked photos per tile: the top one swipes up on a hold-swipe-hold
    cycle, revealing the second underneath, then reverses (animation-
