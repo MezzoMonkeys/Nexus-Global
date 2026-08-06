@@ -423,6 +423,30 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
    0.97 across viewports. */
 .content-split__image img,.content-split__image video{width:100%;height:100%;object-fit:cover;display:block}
 
+/* Monochrome by default, colour on hover.
+   This is one video desaturated in CSS, not a mono file crossfaded with a colour
+   one. Two files cannot be kept in step here: the supplied masters run 5.02s and
+   5.25s, so their motion timing differs and two independently playing elements
+   drift apart over a loop - the misalignment would grow with every cycle. Taking
+   the colour master as the single source makes alignment exact by definition,
+   because both states are the same pixels, and it halves what the visitor
+   downloads. Measured against the mono master, the two grades match: luma means
+   within 1/255 and standard deviations within 2, so a plain grayscale(1) needs no
+   contrast or brightness correction to reproduce it (adding one measured slightly
+   worse).
+   The filter also covers the poster, so the hover reads correctly even before the
+   video has loaded. Scoped to hover-capable pointers: on touch there is no hover
+   state to leave, and the colour would latch on after a tap. */
+/* No will-change: measured identical frame timings with and without it in all
+   three engines, so it would only pin a compositor layer for nothing. */
+.content-split__video{filter:grayscale(1);transition:filter .22s var(--ease)}
+@media(hover:hover){
+  .content-split__image:hover .content-split__video{filter:grayscale(0)}
+}
+@media(prefers-reduced-motion:reduce){
+  .content-split__video{transition:none}
+}
+
 /* Full-bleed variant: sits outside .page__inner (a sibling of it within the
    section) rather than sharing a flex row with the text, so it can ignore
    .page's own padding and .page__inner's max-width entirely. top/right/bottom
@@ -439,7 +463,15 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
    (its padding, plus the same centring math .page__inner uses once its
    1240px cap engages) and adds the text's 640px plus a 56px gap, so the
    image starts exactly where the text column ends at every width. */
-.content-split__image--bleed{position:absolute;top:0;right:0;bottom:0;left:calc(var(--pad) + max(0px,(100vw - 2 * var(--pad) - var(--container)) / 2) + 640px + 56px);flex:none;width:auto;max-width:none;border-radius:0;z-index:0}
+/* z-index:2 puts this above .page__inner (z-index:1), which is what makes the
+   panel hoverable. .page__inner is a transparent box spanning the full 1240px
+   container and the full section height, so at z-index:0 it sat on top of this
+   panel and swallowed the pointer: elementFromPoint over the middle of the video
+   returned .page__inner, and only a ~100px sliver past the container's right edge
+   ever received :hover. Painting above it is safe here because there is nothing to
+   overlap - `left` is derived to start exactly where the 640px text column ends
+   plus a 56px gap, at every width, so the two never share space. */
+.content-split__image--bleed{position:absolute;top:0;right:0;bottom:0;left:calc(var(--pad) + max(0px,(100vw - 2 * var(--pad) - var(--container)) / 2) + 640px + 56px);flex:none;width:auto;max-width:none;border-radius:0;z-index:2}
 /* Short top scrim: the fixed nav's frosted pill sits over this image's own
    top edge, and its backdrop-blur samples whatever's behind it - against a
    bright sky with no tint (unlike .image-panel's sections, which are all

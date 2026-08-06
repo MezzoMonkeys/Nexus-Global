@@ -108,10 +108,12 @@
          the half-resolution file via the media attribute, which load() honours
          when the sources are promoted. If the script never runs, the poster is
          the same frame the still image showed, so nothing is lost.
-         H.264 only, no WebM: on this footage VP9 measured 265KB larger than the
-         MP4 for the same SSIM and PSNR, and browsers take the first source they
-         support, so offering WebM first would have handed Chrome and Firefox the
-         heavier file. -->
+         H.264 only, no WebM: on this footage VP9 measured larger than the MP4 at
+         matched quality, and browsers take the first source they support, so
+         offering WebM first would have handed Chrome and Firefox the heavier file.
+         This is the colour master. It renders monochrome via a CSS filter and
+         returns to colour on hover - see .content-split__video for why one
+         desaturated file beats crossfading two. -->
     <video class="content-split__video" poster="/IMAGERY/our-story-poster.webp"
            width="1248" height="1664" muted loop playsinline preload="none"
            disablepictureinpicture
