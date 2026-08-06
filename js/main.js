@@ -264,6 +264,36 @@
     }
   }
 
+  // Footer flow: the caustic lines drift on their own in CSS. This adds a
+  // second, pointer-led offset on top of that, so moving the cursor over the
+  // footer nudges the lines. Only two custom properties are written here; the
+  // per-group travel distance and the easing live in the stylesheet, and the
+  // CSS keyframe drift keeps running underneath on the inner group. The two
+  // groups read --mx/--my with opposite signs, which is what makes it read as
+  // depth rather than as one sheet sliding.
+  var footerEl = document.querySelector('.site-footer');
+  var footerFlow = footerEl && footerEl.querySelector('.footer-flow');
+  if (footerFlow && !reduceMotion) {
+    var fmx = 0, fmy = 0, flowTicking = false;
+    var applyFlow = function(){
+      footerFlow.style.setProperty('--mx', fmx.toFixed(3));
+      footerFlow.style.setProperty('--my', fmy.toFixed(3));
+      flowTicking = false;
+    };
+    footerEl.addEventListener('pointermove', function(e){
+      var r = footerEl.getBoundingClientRect();
+      if (!r.width || !r.height) return;
+      fmx = ((e.clientX - r.left) / r.width - 0.5) * 2;    // -1 .. 1
+      fmy = ((e.clientY - r.top) / r.height - 0.5) * 2;
+      if (!flowTicking) { requestAnimationFrame(applyFlow); flowTicking = true; }
+    }, { passive: true });
+    // ease back to centre when the cursor leaves, rather than freezing off-axis
+    footerEl.addEventListener('pointerleave', function(){
+      fmx = 0; fmy = 0;
+      if (!flowTicking) { requestAnimationFrame(applyFlow); flowTicking = true; }
+    }, { passive: true });
+  }
+
   // General enquiry form: static site, no backend, builds a pre-filled mailto: link.
   var enquiryForm = document.getElementById('enquiryForm');
   if (enquiryForm) {

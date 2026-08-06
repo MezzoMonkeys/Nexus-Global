@@ -664,9 +664,84 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
    in-flow content" paint tier, which sits BELOW any positioned z-index:0
    layer regardless of DOM order. Without this, the globe stage's opaque
    ink background silently paints over the footer on Home only. */
-.site-footer{position:relative;z-index:1;background:var(--pine);color:var(--plat-55);padding:56px var(--pad) 96px;padding-right:calc(var(--pad) + 64px);font-family:var(--font-label);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;display:flex;justify-content:space-between;align-items:center;gap:24px;flex-wrap:wrap}
-.site-footer a{color:var(--plat-55);transition:color .2s}
+.site-footer{position:relative;z-index:1;overflow:hidden;background:var(--pine);color:var(--plat-70);padding:clamp(64px,7vw,104px) var(--pad) 34px;font-family:var(--font-body);font-size:14px}
+.site-footer a{color:var(--plat-70);transition:color .2s}
 .site-footer a:hover{color:var(--accent-light)}
+
+/* Ambient flow behind the footer. It runs on its own clock rather than on
+   scroll, so the closing surface reads as lit and alive rather than as an
+   effect that fires once.
+   Built from oversized radial gradients, which are soft by nature - no
+   filter:blur, which would force the layer to re-rasterise on every frame of
+   the drift. Every animation touches transform only, so the whole thing stays
+   on the compositor. mix-blend-mode:screen is what makes the washes read as
+   light gathering rather than as flat shapes stacked on the pine. */
+.footer-flow{position:absolute;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+.footer-flow__blob{position:absolute;border-radius:50%;mix-blend-mode:screen;will-change:transform}
+.footer-flow__blob--1{width:84vw;height:84vw;left:-20vw;top:-42vw;background:radial-gradient(closest-side,rgba(18,179,125,.34),rgba(18,179,125,0) 72%);animation:footerDrift1 48s var(--ease) infinite alternate}
+.footer-flow__blob--2{width:72vw;height:72vw;right:-16vw;top:-26vw;background:radial-gradient(closest-side,rgba(11,131,92,.42),rgba(11,131,92,0) 70%);animation:footerDrift2 63s var(--ease) infinite alternate}
+.footer-flow__blob--3{width:58vw;height:58vw;left:24vw;bottom:-32vw;background:radial-gradient(closest-side,rgba(143,230,196,.20),rgba(143,230,196,0) 68%);animation:footerDrift3 39s var(--ease) infinite alternate}
+.footer-flow__blob--4{width:46vw;height:46vw;right:6vw;bottom:-24vw;background:radial-gradient(closest-side,rgba(237,237,237,.08),rgba(237,237,237,0) 70%);animation:footerDrift4 55s var(--ease) infinite alternate}
+@keyframes footerDrift1{from{transform:translate3d(0,0,0) scale(1)}to{transform:translate3d(13vw,7vw,0) scale(1.16)}}
+@keyframes footerDrift2{from{transform:translate3d(0,0,0) scale(1.08)}to{transform:translate3d(-11vw,9vw,0) scale(.94)}}
+@keyframes footerDrift3{from{transform:translate3d(0,0,0) scale(.96)}to{transform:translate3d(9vw,-8vw,0) scale(1.2)}}
+@keyframes footerDrift4{from{transform:translate3d(0,0,0) scale(1.1)}to{transform:translate3d(-12vw,-6vw,0) scale(.9)}}
+
+/* Thin caustic filaments - the bright curved lines that read as light bending
+   through glass. Two groups drifting at different rates keeps the crossings
+   from ever settling into a fixed pattern. */
+.footer-flow__caustics{position:absolute;inset:0;width:100%;height:100%;display:block}
+.footer-flow__caustics path{fill:none;stroke-width:1.4;vector-effect:non-scaling-stroke}
+.footer-flow__caustic-a{will-change:transform;animation:footerCausticA 44s var(--ease) infinite alternate}
+.footer-flow__caustic-b{will-change:transform;animation:footerCausticB 58s var(--ease) infinite alternate}
+/* Pointer-led offset, layered as a parent of the drifting group rather than on
+   it: an animation owns the transform property outright, so a second transform
+   on the same element would simply be overridden. Nesting composes the two
+   instead - autonomous drift inside, cursor offset outside.
+   --mx/--my come from js/main.js as -1..1. The travel is deliberately small,
+   and the transition is what does the real work: each pointermove retargets it,
+   so the lines trail the cursor with a soft lag instead of snapping to it. The
+   two groups take opposite signs so they separate in depth as the cursor moves.
+   Values are unitless and multiplied by px here, so the magnitude stays in the
+   stylesheet where it can be tuned. */
+.footer-flow__pp{transition:transform .55s var(--ease);will-change:transform}
+.footer-flow__pp--a{transform:translate3d(calc(var(--mx,0) * 17px),calc(var(--my,0) * 11px),0)}
+.footer-flow__pp--b{transform:translate3d(calc(var(--mx,0) * -12px),calc(var(--my,0) * -8px),0)}
+@keyframes footerCausticA{from{transform:translate3d(-3%,2%,0)}to{transform:translate3d(4%,-3%,0)}}
+@keyframes footerCausticB{from{transform:translate3d(3%,-2%,0)}to{transform:translate3d(-4%,3%,0)}}
+
+/* Fine grain over the whole flow: large soft gradients band badly on dark
+   surfaces, and the noise breaks the steps up. */
+.footer-flow::after{content:'';position:absolute;inset:0;background-image:var(--noise-svg);opacity:.05;mix-blend-mode:overlay}
+
+@media(prefers-reduced-motion:reduce){
+  .footer-flow__blob,.footer-flow__caustic-a,.footer-flow__caustic-b{animation:none}
+  /* main.js already skips writing --mx/--my here; this also drops the easing so
+     nothing can animate if the properties are set by any other route */
+  .footer-flow__pp{transition:none;transform:none}
+}
+
+.footer__inner{position:relative;z-index:1;max-width:var(--container);margin:0 auto;width:100%}
+.footer__top{display:flex;justify-content:space-between;align-items:flex-start;gap:clamp(32px,4vw,64px);flex-wrap:wrap}
+.footer__lead{margin:0;max-width:22ch;font-size:clamp(19px,1.8vw,25px);line-height:1.3;letter-spacing:-0.01em;color:var(--plat-85)}
+.footer__cols{display:flex;gap:clamp(30px,5vw,84px);flex-wrap:wrap;margin-left:auto}
+.footer__col{display:flex;flex-direction:column;gap:9px;min-width:148px}
+.footer__col-h{margin:0 0 7px;font-family:var(--font-label);font-weight:500;font-size:10.5px;letter-spacing:.10em;text-transform:uppercase;color:var(--plat-40)}
+.footer__col p{margin:0;font-size:14px;line-height:1.55}
+.footer__col a{font-size:14px;line-height:1.55}
+
+/* The wordmark spans the full content column, which is the point - it is the
+   sign-off, and it doubles as the home link now that the nav has no Home item. */
+.footer__logo{display:block;margin:clamp(52px,7vw,100px) 0 26px}
+.footer__logo img{width:100%;height:auto;display:block}
+
+/* padding-right clears the fixed back-to-top button in the corner */
+.footer__base{display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap;padding-top:20px;padding-right:64px;border-top:1px solid var(--plat-10);font-family:var(--font-label);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--plat-40)}
+
+@media(max-width:760px){
+  .footer__cols{margin-left:0;gap:28px 40px}
+  .footer__lead{max-width:100%}
+}
 
 /* Monoline card icons, stroked in the brand green at the step that suits the
    surface behind them. */
