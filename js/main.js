@@ -264,6 +264,55 @@
     }
   }
 
+  // About "Our story" background video. The <source> elements ship with
+  // data-src rather than src, so the initial page load fetches no video at all -
+  // only the poster. They are promoted, loaded and played when the section comes
+  // within 400px, and paused again when it leaves, so an off-screen video is
+  // never being decoded.
+  // Skipped entirely - poster only - for reduced motion, for Data Saver, and on
+  // 2g-class connections, where a 0.5-1.2MB autoplaying background is a cost the
+  // visitor did not ask for. Promoting the sources on demand is also what lets
+  // the media attribute pick the half-resolution pair for phones, since load()
+  // re-runs resource selection at that moment.
+  var storyVideo = document.querySelector('.content-split__video');
+  if (storyVideo && 'IntersectionObserver' in window) {
+    var conn = navigator.connection || {};
+    var frugal = conn.saveData === true || /(^|\-)2g$/.test(conn.effectiveType || '');
+    if (!reduceMotion && !frugal) {
+      var storyLoaded = false;
+      var storyObserver = new IntersectionObserver(function(entries){
+        var near = entries[0].isIntersecting;
+        if (near && !storyLoaded) {
+          storyLoaded = true;
+          var srcs = storyVideo.querySelectorAll('source[data-src]');
+          for (var i = 0; i < srcs.length; i++) {
+            srcs[i].setAttribute('src', srcs[i].getAttribute('data-src'));
+            srcs[i].removeAttribute('data-src');
+          }
+          storyVideo.load();
+        }
+        if (!storyLoaded) return;
+        if (near) {
+          // a refused autoplay simply leaves the poster showing
+          var played = storyVideo.play();
+          if (played && played.catch) played.catch(function(){});
+        } else {
+          storyVideo.pause();
+        }
+      }, { rootMargin: '400px 0px' });
+
+      // Arming is deferred until the page has finished loading. On a 900px-tall
+      // desktop viewport #story begins within a few pixels of the fold, so the
+      // observer fires immediately on load at any useful rootMargin and the
+      // video ends up competing with the critical path for bandwidth. Waiting
+      // for the load event keeps the first paint clear and still has the video
+      // ready well before it is scrolled to.
+      var armStoryVideo = function(){ storyObserver.observe(storyVideo); };
+      if (document.readyState === 'complete') armStoryVideo();
+      else window.addEventListener('load', armStoryVideo, { once: true });
+    }
+  }
+
   // Footer flow: the caustic lines drift on their own in CSS. This adds a
   // second, pointer-led offset on top of that, so moving the cursor over the
   // footer nudges the lines. Only two custom properties are written here; the

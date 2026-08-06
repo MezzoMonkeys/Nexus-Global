@@ -2,3 +2,9 @@ node_modules/
 .DS_Store
 Thumbs.db
 .claude/
+
+# Raw video masters. The generator's originals are far too heavy to ship or to
+# carry in git history (the "Our story" master is 9MB for 4.5s at 16 Mbps); the
+# encoded derivatives beside them are what the site actually serves. Keep the
+# masters locally or in shared storage so a re-encode is always possible.
+VIDEOS/hf_*

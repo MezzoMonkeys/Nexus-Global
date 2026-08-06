@@ -102,7 +102,21 @@
     </div>
   </div>
   <div class="content-split__image content-split__image--bleed reveal reveal-d3">
-    <img src="/IMAGERY/our-story.jpg" alt="Black and white view looking straight up at converging Hong Kong skyscrapers" width="1792" height="2400" loading="lazy">
+    <!-- The sources carry data-src, not src, so the browser fetches no video at
+         all until js/main.js promotes them as the section comes into range. The
+         poster is the only media the initial load pays for. Phones are served
+         the half-resolution pair via the media attribute, which load() honours
+         when the sources are promoted. If the script never runs, the poster is
+         the same frame the still image showed, so nothing is lost. -->
+    <video class="content-split__video" poster="/IMAGERY/our-story-poster.webp"
+           width="1248" height="1664" muted loop playsinline preload="none"
+           disablepictureinpicture
+           aria-label="Black and white view looking straight up at converging Hong Kong skyscrapers">
+      <source data-src="/VIDEOS/our-story-mobile.webm" type="video/webm" media="(max-width:900px)">
+      <source data-src="/VIDEOS/our-story-mobile.mp4" type="video/mp4" media="(max-width:900px)">
+      <source data-src="/VIDEOS/our-story.webm" type="video/webm">
+      <source data-src="/VIDEOS/our-story.mp4" type="video/mp4">
+    </video>
   </div>
 </section>
 
