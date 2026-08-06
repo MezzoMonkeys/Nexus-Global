@@ -184,14 +184,28 @@
 </svg>
 <section class="page page--dark stack" id="lincor">
   <div class="motif" aria-hidden="true"><svg viewBox="0 0 1000 700" preserveAspectRatio="xMidYMid slice">
-    <g transform="translate(325,270) scale(1.4)">
-      <circle cx="-20" cy="-90" r="75"/>
-      <path d="M0,45 Q0,0 45,0 L355,0 Q400,0 400,45 L400,355 Q400,400 355,400 L265,400 Q220,400 220,355 L220,305 Q220,220 135,220 L45,220 Q0,220 0,175 Z"/>
-      <path d="M0,45 Q0,0 45,0 L355,0 Q400,0 400,45 L400,355 Q400,400 355,400 L265,400 Q220,400 220,355 L220,305 Q220,220 135,220 L45,220 Q0,220 0,175 Z" transform="translate(-150,150)"/>
-    </g>
+    <circle cx="60" cy="600" r="240"/>
+    <circle cx="1080" cy="80" r="360"/>
   </svg></div>
   <div class="page__inner" style="justify-content:center;align-items:center;text-align:center">
-    <p class="eyebrow reveal">Part of something bigger</p>
+    <div class="lincor-mark reveal" aria-hidden="true">
+      <svg viewBox="-162 -177 574 739">
+        <defs>
+          <!-- The front hook knocks a gap out of the back one, so the two read
+               as overlapping shapes with negative space between them (as in the
+               solid logo) instead of two outlines crossing through each other.
+               Black hides: the front hook filled, plus a stroke wider than its
+               own 24 so the gap clears both sides of its visible outline. -->
+          <mask id="lincorKnockout" maskUnits="userSpaceOnUse" x="-250" y="-260" width="800" height="900">
+            <rect x="-250" y="-260" width="800" height="900" fill="#fff"/>
+            <path d="M0,45 Q0,0 45,0 L355,0 Q400,0 400,45 L400,355 Q400,400 355,400 L265,400 Q220,400 220,355 L220,305 Q220,220 135,220 L45,220 Q0,220 0,175 Z" transform="translate(-150,150)" fill="#000" stroke="#000" stroke-width="76" stroke-linejoin="round"/>
+          </mask>
+        </defs>
+        <circle cx="-20" cy="-90" r="75"/>
+        <path d="M0,45 Q0,0 45,0 L355,0 Q400,0 400,45 L400,355 Q400,400 355,400 L265,400 Q220,400 220,355 L220,305 Q220,220 135,220 L45,220 Q0,220 0,175 Z" mask="url(#lincorKnockout)"/>
+        <path d="M0,45 Q0,0 45,0 L355,0 Q400,0 400,45 L400,355 Q400,400 355,400 L265,400 Q220,400 220,355 L220,305 Q220,220 135,220 L45,220 Q0,220 0,175 Z" transform="translate(-150,150)"/>
+      </svg>
+    </div>
     <h2 class="display--sm reveal reveal-d2" style="margin:14px 0 20px">Backed by Lincor Holdings</h2>
     <p class="lead reveal reveal-d3" style="margin:0 auto">Nexus Global is the dedicated trading arm of Lincor, the financial stability and governance of a group, focused entirely on trade outcomes in Africa.</p>
   </div>
