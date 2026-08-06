@@ -324,15 +324,14 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
 /* Lincor mark in outline form, standing in for the eyebrow line above the
    heading - the mark now does that job, so the text was dropped. Stroke-only
    in platinum rather than the motif's 12% hairline: this is the section's
-   subject, not ambient decoration. stroke-width is in viewBox units, so it
-   scales with the mark; overflow:visible keeps the stroke from being clipped
-   at the viewBox edge. */
+   subject, not ambient decoration.
+   The two paths are the contours of the mark's nested J strokes, which sit
+   concentrically with a gap rather than overlapping, so nothing needs to
+   occlude anything. stroke-width is in viewBox units so it scales with the
+   mark; overflow:visible keeps the stroke off the viewBox edge. */
 .lincor-mark{display:flex;justify-content:center;margin-bottom:26px}
 .lincor-mark svg{height:clamp(58px,7vw,82px);width:auto;display:block;overflow:visible}
-/* Direct children only: the knockout mask's own path carries fill/stroke as
-   presentation attributes, and a CSS rule would override them and silently
-   disable the mask. */
-.lincor-mark>svg>circle,.lincor-mark>svg>path{fill:none;stroke:var(--platinum);stroke-width:24;stroke-linejoin:round}
+.lincor-mark svg circle,.lincor-mark svg path{fill:none;stroke:var(--platinum);stroke-width:10;stroke-linejoin:round}
 
 /* Network & Markets */
 #footprint.stack{z-index:2}
