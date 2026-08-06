@@ -273,6 +273,18 @@
   // depth rather than as one sheet sliding.
   var footerEl = document.querySelector('.site-footer');
   var footerFlow = footerEl && footerEl.querySelector('.footer-flow');
+
+  // The flow only needs to run while it is on screen. Left unchecked the
+  // animations tick for the whole visit, keeping compositor layers alive behind
+  // content nobody has scrolled to. The rootMargin starts it just before the
+  // footer appears, so it is already in motion by the time it is visible.
+  if (footerFlow && 'IntersectionObserver' in window) {
+    footerFlow.classList.add('footer-flow--idle');
+    new IntersectionObserver(function(entries){
+      footerFlow.classList.toggle('footer-flow--idle', !entries[0].isIntersecting);
+    }, { rootMargin: '200px 0px' }).observe(footerEl);
+  }
+
   if (footerFlow && !reduceMotion) {
     var fmx = 0, fmy = 0, flowTicking = false;
     var applyFlow = function(){
