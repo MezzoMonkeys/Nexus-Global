@@ -683,6 +683,66 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
 .section-head__sub{justify-self:end;text-align:right;max-width:42ch;font-size:14.5px;color:var(--ink-55);line-height:1.55}
 .page--dark .section-head__sub{color:var(--plat-55)}
 @media(max-width:780px){.section-head{grid-template-columns:1fr}.section-head__sub{justify-self:start;text-align:left}}
+/* Heading with no facing summary. The two-column grid exists to set a headline
+   against a paragraph on the right; with nothing to face, one column is the
+   honest declaration rather than a grid holding an empty cell. */
+.section-head--lead{display:block}
+
+/* ── Pillars ────────────────────────────────────────────────────────────────
+   Four points set straight onto the section — a large drawn mark, a heading,
+   a line or two — with no card behind them. The card surface is this site's
+   default container and it carries nearly every other section, so the absence
+   here is the point: it lets the marks be the thing you see, and gives the page
+   somewhere to breathe between two grids of boxes.
+
+   The row is what makes the marks large. In a two-up grid each cell is most of
+   a column wide and an icon can only ever be an ornament at the top of it; four
+   narrow columns put the mark and the width of the text at nearly the same
+   measure, which is what reads as the icon carrying the section. */
+/* Centred in the section rather than sitting at the top, because without the
+   card grid this is a short block and a screen of dead space under it reads as
+   an unfinished section.
+   `safe` is doing real work: stacked on a phone these four run taller than the
+   viewport, and ordinary centring overflows a flex container equally at BOTH
+   ends — which lifted the eyebrow up behind the fixed nav, unreachable. `safe`
+   drops back to start alignment the moment the content stops fitting, so the
+   centring only applies where there is room for it. */
+#where-we-work .page__inner{justify-content:safe center}
+
+.pillars{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(24px,3.4vw,52px);margin-top:8px}
+.pillar{display:flex;flex-direction:column;align-items:flex-start;gap:18px}
+
+/* Stroke width is in the viewBox's own units, so it scales with the box: one
+   number holds for every size the mark is drawn at, and there is no separate
+   weight to maintain per breakpoint.
+   0.42, against the 1.4 used at 30px on .card__icon, is an optical correction
+   and a large one. Line weight has to come DOWN as a mark scales up, not stay
+   proportional — keeping the small-icon ratio here produced a ~9px line, which
+   reads as a chunky app glyph rather than a drawing.
+   Note that the two numbers on this rule are not independent: because the stroke
+   is in viewBox units it scales with the box, so trimming the size thins the
+   line as well. At 156px the line lands near 2.7px, and on a phone nearer 1.8 —
+   fine, but every screen that matters here renders it at 2x or better, where
+   that is a crisp hairline rather than a broken one. */
+.pillar__icon{width:clamp(88px,10.5vw,156px);height:auto;aspect-ratio:1;stroke:currentColor;fill:none;stroke-width:.42;stroke-linecap:round;stroke-linejoin:round;color:var(--platinum);display:block}
+.pillar__h{font-size:clamp(17px,1.35vw,20px);letter-spacing:-0.01em;line-height:1.25;color:var(--platinum)}
+.pillar__p{font-family:var(--font-body);font-size:14px;line-height:1.6;color:var(--plat-70);margin:0;max-width:34ch}
+
+/* Two-up, then stacked. The mark is re-sized at each step rather than left on
+   one viewport-relative clamp, because the thing it has to hold its own against
+   is the COLUMN, not the window: dropping from four columns to two doubles the
+   measure at the same viewport width, and a single clamp that looks right across
+   four narrow columns leaves the mark a quarter of the width of two wide ones,
+   at which point it is back to being an ornament above a paragraph. */
+@media(max-width:980px){
+  .pillars{grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(28px,5vw,52px)}
+  .pillar__icon{width:clamp(104px,14.5vw,148px)}
+}
+@media(max-width:560px){
+  .pillars{grid-template-columns:1fr;gap:38px}
+  .pillar{gap:14px}
+  .pillar__icon{width:100px}
+}
 
 /* Cards, flat filled surfaces with large radius, no borders, no shadow */
 .card{border:none;border-radius:var(--radius-card);padding:32px 30px 32px;display:flex;flex-direction:column;gap:14px;background:var(--ink-04);transition:background .3s var(--ease),transform .3s var(--ease)}
