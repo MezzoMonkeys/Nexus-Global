@@ -84,31 +84,52 @@
   </div>
 </section>
 
-<section class="page stack" id="footprint">
+<!-- The curtain. This section does not arrive as one platinum block: six columns
+     rise out of the bottom of the screen in sequence, left to right, and only once
+     they have all landed does the copy cascade in behind them. The columns are
+     decorative and carry no content, so they are hidden from assistive tech; the
+     section reads exactly as it did before with the effect off. Everything is
+     driven by scroll position in CSS (see .curtain in styles.css) - no script, and
+     no change to the reading order. -->
+<section class="page stack curtain" id="footprint">
+  <!-- Reference clock. Paints nothing, and is deliberately NOT inside
+       .curtain__cols: the columns are selected by :nth-child, so an extra
+       element in there would renumber every one of them. It exists so main.js
+       can read the browser's own reading of this section's scroll progress
+       rather than recomputing it from geometry. See the momentum note there. -->
+  <span class="curtain__clock" aria-hidden="true"></span>
+  <div class="curtain__cols" aria-hidden="true">
+    <span class="curtain__col"></span>
+    <span class="curtain__col"></span>
+    <span class="curtain__col"></span>
+    <span class="curtain__col"></span>
+    <span class="curtain__col"></span>
+    <span class="curtain__col"></span>
+  </div>
   <div class="motif" aria-hidden="true"><svg viewBox="0 0 1000 700" preserveAspectRatio="xMidYMid slice">
     <circle cx="120" cy="560" r="280"/>
     <circle cx="860" cy="120" r="90"/>
   </svg></div>
   <div class="page__inner">
-    <p class="eyebrow reveal">Footprint</p>
-    <h2 class="display--sm reveal reveal-d2" style="margin:14px 0 32px">Where We Operate</h2>
+    <p class="eyebrow reveal curtain__in" style="--d:0">Footprint</p>
+    <h2 class="display--sm reveal reveal-d2 curtain__in" style="--d:1;margin:14px 0 32px">Where We Operate</h2>
     <div class="grid-4">
-      <div class="card reveal spotlight">
+      <div class="card reveal spotlight curtain__in" style="--d:2.4">
         <svg class="card__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 21h16M6 21V6l6-3 6 3v15M10 9h4M10 13h4M10 17h4"/></svg>
         <h3>Hong Kong (HQ)</h3>
         <p>Our head office in Admiralty, Hong Kong is our sourcing and operations hub, positioned at the intersection of Asian manufacturing and global trade routes. From here we manage supplier relationships, quality oversight, and logistics coordination for every order we place.</p>
       </div>
-      <div class="card reveal reveal-d2 spotlight">
+      <div class="card reveal reveal-d2 spotlight curtain__in" style="--d:3.4">
         <svg class="card__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6 7-11a7 7 0 0 0-14 0c0 5 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
         <h3>South Africa (primary market)</h3>
         <p>South Africa is our anchor market on the continent. We supply retail groups and brands across Gauteng, the Western Cape, KwaZulu-Natal, and beyond, with deep familiarity with the country's retail landscape, import requirements, and distribution infrastructure.</p>
       </div>
-      <div class="card reveal reveal-d3 spotlight">
+      <div class="card reveal reveal-d3 spotlight curtain__in" style="--d:4.4">
         <svg class="card__icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.4 4 5.6 4 9s-1.4 6.6-4 9c-2.6-2.4-4-5.6-4-9s1.4-6.6 4-9z"/></svg>
         <h3>Africa (growth markets)</h3>
         <p>Beyond South Africa, we support retail and distribution partners across sub-Saharan Africa and select markets in East and West Africa, each with its own regulatory environment, infrastructure, and consumer dynamics, which we plan for accordingly.</p>
       </div>
-      <div class="card reveal reveal-d4 spotlight">
+      <div class="card reveal reveal-d4 spotlight curtain__in" style="--d:5.4">
         <svg class="card__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h11v8H3zM14 10h4l3 3v2h-7z"/><circle cx="7" cy="17" r="1.6"/><circle cx="17" cy="17" r="1.6"/></svg>
         <h3>What We Offer</h3>
         <p>Plumbing and hardware is our core category, supplied to plumbing wholesalers and hardware retailers across every market we serve.</p>
@@ -116,6 +137,12 @@
     </div>
   </div>
 </section>
+
+<!-- Pinned dwell for the curtain above. #footprint is sticky and stays stuck for
+     the rest of the page, so this empty run of scroll simply delays the arrival of
+     the next section: it is the room the copy cascade plays out in, and the reading
+     time after it. Nothing is drawn here. -->
+<div class="curtain__dwell" aria-hidden="true"></div>
 
 <section class="page page--dark stack" id="where-we-work">
   <div class="page__inner">

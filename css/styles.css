@@ -104,8 +104,12 @@ a{color:inherit;text-decoration:none}
 .nav__logo{position:relative;width:34px;height:34px}
 .nav__logo-img{position:absolute;inset:0;width:34px;height:34px;display:block;transition:opacity .35s var(--ease)}
 .nav__logo-img--on-dark{opacity:0}
-.nav.dark .nav__logo-img--on-light{opacity:0}
-.nav.dark .nav__logo-img--on-dark{opacity:1}
+/* The mark cross-fades on .dark-brand, not .dark. The two agree everywhere
+   except mid-curtain (network.html), where the bar can straddle two surfaces at
+   once and the mark's own corner is the only thing that should decide which way
+   it faces — see the nav-theme note in main.js. */
+.nav.dark-brand .nav__logo-img--on-light{opacity:0}
+.nav.dark-brand .nav__logo-img--on-dark{opacity:1}
 
 /* The glass capsule. The low-alpha tint sits UNDER the blur deliberately, so the
    pill still reads as a capsule where backdrop-filter is unsupported or disabled
@@ -340,6 +344,142 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
    next section sliding up over that held frame exactly as before. */
 .stack{position:sticky;top:var(--pin-top,0)}
 #cover.stack{z-index:1}
+
+/* ── The curtain (network.html, #footprint) ──────────────────────────────────
+   A .stack section normally arrives as one solid block sliding up over the one
+   beneath it. This variant breaks that block into six columns that rise out of
+   the bottom of the screen one after another, left to right, over the section's
+   own arrival; once they have landed the copy cascades in behind them in the
+   same rhythm. Scrubbed by scroll position, so it is exact in both directions
+   and there is no trigger to mis-fire.
+
+   THE WHOLE EFFECT IS OPTIONAL. Everything below lives inside @supports +
+   no-preference, and the columns are display:none outside it, so a browser
+   without scroll-driven animations (Firefox, today) and anyone who has asked for
+   reduced motion get the section exactly as it was: one platinum block, the
+   normal .reveal entrances, no extra elements painted and no work done. The
+   markup carries no content in the columns, so nothing is lost either way.
+
+   IT COSTS NO SCRIPT AND NO LAYOUT. Six spans and a run of empty scroll; the
+   animation is transform and opacity on a timeline the browser owns, so it runs
+   on the compositor next to the work main.js is already doing rather than on top
+   of it. */
+.curtain__cols{display:none}
+.curtain__clock{display:none}
+.curtain__dwell{height:0}
+
+@supports (animation-timeline: view()){
+  @media (prefers-reduced-motion:no-preference){
+
+    /* The section stops painting its own surface — the columns ARE the surface
+       now, and a background here would be the very block we are replacing,
+       sliding up behind them. */
+    .curtain{background:transparent;view-timeline-name:--curtain;view-timeline-axis:block}
+
+    /* Fixed to the VIEWPORT, not laid into the section, and that is a
+       correctness requirement rather than a convenience. The columns are the
+       one thing on the page whose clock is allowed to lag behind the scroll
+       position (see the momentum note in main.js). Anchored to the section they
+       would be positioned by two different clocks at once — the section's box by
+       the real scroll, their own transform by the lagged one — and the moment
+       those disagree a strip of the dark hero opens up along the bottom edge,
+       because a landed column has been lifted above where the section thinks it
+       is. Anchored to the viewport a column's own transform is its whole
+       position: it spans the screen exactly when its share of the range is done,
+       whatever the section is doing and whatever the lag. It also makes the
+       keyframes what they look like they should be.
+       pointer-events:none is load-bearing here: this box covers the whole
+       viewport for the rest of the page and would otherwise swallow every
+       click. Nothing shows through it because #where-we-work and the footer both
+       paint later in the document at the same z-index. */
+    .curtain__cols{display:flex;position:fixed;inset:0;z-index:0;pointer-events:none}
+
+    /* The reference clock. A zero-sized box carrying one animation over a range
+       twice as long as the columns use, so main.js can ask the browser where it
+       thinks this section is rather than deriving it from offsetTop and viewport
+       height and hoping the two agree. Only its progress is ever read; opacity
+       is simply an animatable property to hang it on, and there is nothing here
+       to paint. */
+    .curtain__clock{display:block;position:absolute;width:0;height:0;overflow:hidden;pointer-events:none;
+      animation:curtainClock linear both;animation-timeline:--curtain;animation-range:entry 0% entry 200%}
+    .curtain__col{flex:1;position:relative;background:var(--platinum);
+      animation-timing-function:linear;animation-fill-mode:both;
+      animation-timeline:--curtain;animation-range:entry}
+
+    /* Each column rises over half the range, starting 7.5% of the range after
+       the one to its left, so the last lands at 87.5% — leaving an eighth of a
+       screen of plain platinum before the section settles and the copy begins.
+       Held below the fold until its turn and held at rest afterwards, which is
+       what the doubled keyframe stops are for. */
+    .curtain__col:nth-child(1){animation-name:curtainCol1}
+    .curtain__col:nth-child(2){animation-name:curtainCol2}
+    .curtain__col:nth-child(3){animation-name:curtainCol3}
+    .curtain__col:nth-child(4){animation-name:curtainCol4}
+    .curtain__col:nth-child(5){animation-name:curtainCol5}
+    .curtain__col:nth-child(6){animation-name:curtainCol6}
+
+    /* Seam between neighbours. It earns its place only in the moment the columns
+       come level with one another — while they are staggered their own edges
+       against the dark section behind already read as six separate panels. So it
+       is drawn throughout the rise and taken away once the section locks, rather
+       than being left as a permanent grid behind the copy. */
+    .curtain__col + .curtain__col::before{content:"";position:absolute;top:0;bottom:0;left:0;width:1px;
+      background:var(--ink-10);
+      animation:curtainSeam linear both;animation-timeline:--curtain;animation-range:entry 100% entry 114%}
+
+    /* The motif is absolutely positioned inside the section, so during the rise
+       it sits over the dark hero with no platinum under it yet — stray circles
+       floating on the wrong background. It is brought in with the seams going
+       out, after the lock, where the section is no longer moving and so it
+       cannot drift as it appears. */
+    .curtain .motif{animation:curtainMotifIn linear both;animation-timeline:--curtain;animation-range:entry 100% entry 114%}
+
+    /* The copy. Ranges run PAST entry 100%, which is not a trick: once the
+       section is stuck the timeline keeps advancing at the same rate per pixel
+       scrolled, so 112%-186% is simply the stretch of pinned scroll after the
+       columns have landed — measured, and identical in Chromium and WebKit.
+       --d is the element's place in the cascade, set in the markup, so the
+       left-to-right rhythm of the columns carries straight into the content.
+       This overrides the .reveal transition rather than replacing it: with the
+       effect off, .reveal is still what brings this copy in. */
+    .curtain__in{animation-name:curtainIn;animation-timing-function:var(--ease-entrance);
+      animation-fill-mode:both;animation-timeline:--curtain;
+      animation-range:entry calc(106% + var(--d) * 5%) entry calc(128% + var(--d) * 5%)}
+
+    /* Room for the cascade to play out in, and then to read in. The last card
+       settles around 55% of a screen past the lock; the rest of this is settled
+       reading time before the next section starts climbing over it, which is why
+       it is a whole screen and not just enough to fit the animation. Reserved
+       only when the effect is actually running - with it off the section keeps
+       its original pacing exactly. */
+    .curtain__dwell{height:100vh}
+  }
+}
+
+/* One screen below the fold, then up to the top edge over the column's own half
+   of the range, then held. Because the columns are fixed to the viewport these
+   are literally where the column is, not an offset from anything. */
+@keyframes curtainCol1{  0%{transform:translateY(100vh)}  50%,100%{transform:translateY(0)}}
+@keyframes curtainCol2{0%,7.5%{transform:translateY(100vh)}57.5%,100%{transform:translateY(0)}}
+@keyframes curtainCol3{ 0%,15%{transform:translateY(100vh)}  65%,100%{transform:translateY(0)}}
+@keyframes curtainCol4{0%,22.5%{transform:translateY(100vh)}72.5%,100%{transform:translateY(0)}}
+@keyframes curtainCol5{ 0%,30%{transform:translateY(100vh)}  80%,100%{transform:translateY(0)}}
+@keyframes curtainCol6{0%,37.5%{transform:translateY(100vh)}87.5%,100%{transform:translateY(0)}}
+@keyframes curtainClock{from{opacity:1}to{opacity:0}}
+@keyframes curtainSeam{from{opacity:1}to{opacity:0}}
+@keyframes curtainMotifIn{from{opacity:0}to{opacity:1}}
+@keyframes curtainIn{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:none}}
+
+/* Narrow screens get fewer, wider columns — six of them on a phone is a set of
+   65px slivers, which reads as noise rather than as panels. The ones that remain
+   keep their own keyframes and simply share the width out, so the stagger stays
+   even and the last column just lands earlier. */
+@media(max-width:760px){
+  .curtain__col:nth-child(n+5){display:none}
+}
+@media(max-width:520px){
+  .curtain__col:nth-child(n+4){display:none}
+}
 
 /* Home.
    NOTE these are GLOBAL id selectors, grouped by page in comments only — the CSS

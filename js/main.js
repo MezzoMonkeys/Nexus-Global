@@ -12,6 +12,7 @@
   // progress bar below is animated entirely in CSS, off the main thread, and the
   // JS task for it is never registered at all.
   const nativeScrollTimeline = !!(window.CSS && CSS.supports && CSS.supports('animation-timeline: scroll()'));
+  const nativeViewTimeline = !!(window.CSS && CSS.supports && CSS.supports('animation-timeline: view()'));
 
   // ── One scroll bus ───────────────────────────────────────────────────────
   // Every scroll-driven effect on this page used to own its own listener — five
@@ -165,23 +166,70 @@
   // that's the one actually behind the nav right now.
   var sections = document.querySelectorAll('.page[id]');
   if (sections.length) {
-    var navIsDark = null;
-    onScroll(function(){
-      var probeY = nav.getBoundingClientRect().bottom;
+    // A .curtain section (see styles.css) does not arrive as its own box: six
+    // columns rise ahead of it and reach the top of the screen well before its
+    // top edge does. Measuring the box would leave the bar in its dark treatment
+    // against platinum that has already covered it — light text on a light
+    // surface for most of a screen of scrolling. Measure the column sitting
+    // under the middle of the bar instead, since that is the surface the capsule
+    // is actually being read against. Falls back to the section's own top
+    // wherever the columns are not running — no scroll-timeline support, or
+    // reduced motion — because there they are display:none and have no box.
+    // Because the columns arrive one at a time, the bar can genuinely be over two
+    // different surfaces at once, so it is sampled at an x position rather than
+    // globally: the column under that point is the one being read against.
+    var frontEdgeOf = function(s, x){
+      if (s.classList.contains('curtain')) {
+        var cols = s.querySelectorAll('.curtain__col');
+        for (var i = 0; i < cols.length; i++) {
+          var cr = cols[i].getBoundingClientRect();
+          if (cr.width && cr.left <= x && cr.right >= x) return cr.top;
+        }
+      }
+      return s.getBoundingClientRect().top;
+    };
+    var frontIsDarkAt = function(probeY, x){
       var front = sections[0];
       sections.forEach(function(s){
-        if (s.getBoundingClientRect().top <= probeY) front = s;
+        if (frontEdgeOf(s, x) <= probeY) front = s;
       });
       return front.classList.contains('page--dark');
-    }, function(isDark){
-      // The class toggle is skipped unless the answer actually changed. Writing
+    };
+
+    // The logo is sampled separately from everything else. The capsule is centred
+    // and the menu button sits right, so the middle of the bar speaks for both,
+    // but the mark is hard left — and on a phone, where the curtain is three wide
+    // columns, the leftmost one covers the mark while the middle of the bar is
+    // still over the dark hero. One reading for the whole bar leaves the mark in
+    // its light-on-dark form against platinum, which all but erases it. Only the
+    // curtain can produce that split, so the second probe is skipped entirely on
+    // pages without one.
+    var navBrand = nav.querySelector('.nav__brand');
+    var hasCurtain = !!document.querySelector('.page.curtain');
+    var navIsDark = null, brandIsDark = null;
+    onScroll(function(){
+      var probeY = nav.getBoundingClientRect().bottom;
+      var main = frontIsDarkAt(probeY, (window.innerWidth || 0) / 2);
+      var brand = main;
+      if (hasCurtain && navBrand) {
+        var br = navBrand.getBoundingClientRect();
+        brand = frontIsDarkAt(probeY, br.left + br.width / 2);
+      }
+      return { main: main, brand: brand };
+    }, function(m){
+      // Each toggle is skipped unless its own answer actually changed. Writing
       // the same class back every frame is not free: it invalidates style for the
       // nav and the progress bar, and both carry .35s colour transitions that a
       // re-set can restart.
-      if (isDark === navIsDark) return;
-      navIsDark = isDark;
-      nav.classList.toggle('dark', isDark);
-      if (scrollProgress) scrollProgress.classList.toggle('dark', isDark);
+      if (m.main !== navIsDark) {
+        navIsDark = m.main;
+        nav.classList.toggle('dark', m.main);
+        if (scrollProgress) scrollProgress.classList.toggle('dark', m.main);
+      }
+      if (m.brand !== brandIsDark) {
+        brandIsDark = m.brand;
+        nav.classList.toggle('dark-brand', m.brand);
+      }
     });
   }
 
@@ -455,6 +503,122 @@
       fmx = 0; fmy = 0;
       if (!flowTicking) { requestAnimationFrame(applyFlow); flowTicking = true; }
     }, { passive: true });
+  }
+
+  // ── Curtain momentum (network.html) ──────────────────────────────────────
+  // The curtain is authored in CSS against the section's own view timeline, so
+  // it tracks scroll position exactly: stop scrolling and it stops in the same
+  // frame. That is honest, and it reads as abrupt — the columns arrive with no
+  // weight to them. This gives the sequence a little inertia, so releasing the
+  // wheel lets the columns carry a fraction further and settle.
+  //
+  // NOTHING HERE TOUCHES SCROLLING. The page still scrolls natively at its own
+  // speed; the only thing that lags is the animation's own clock, so there is no
+  // input latency, no swallowed wheel events, and Ctrl+F, PageDown and scrollbar
+  // dragging all behave exactly as before. This is the narrow version of scroll
+  // easing that costs nothing: it is applied to one decorative sequence, not to
+  // the document.
+  //
+  // The keyframes and ranges stay in the stylesheet and are read back off the
+  // animations rather than restated here — this moves each CSS animation onto a
+  // JS clock and drives its currentTime, so the stylesheet remains the only
+  // place the motion is defined. If any of that fails the original timelines are
+  // put back and the effect carries on exactly as it does without this.
+  var curtainSec = document.querySelector('.page.curtain');
+  if (curtainSec && nativeViewTimeline && !reduceMotion && typeof ViewTimeline !== 'undefined') {
+    var armCurtainMomentum = function(){
+      var CLOCK_SPAN = 200;   // the clock's range, in % of `entry` (see styles.css)
+      var DUR = 1000;         // arbitrary scale for the retimed animations
+      // Time constant for the carry. The columns cross a screen in half the
+      // range, so they travel at twice the scroll rate and any lag reads twice
+      // as far on screen as it does in scroll distance — 0.07 puts an ordinary
+      // reading scroll at about a tenth of a screen of carry, settled inside
+      // 200ms. Raising this past ~0.1 stops reading as weight and starts
+      // reading as the page being behind you.
+      var TAU = 0.07;
+      var MAX_LAG = 14;       // % of `entry` the sequence may ever trail by
+      var SETTLED = 0.02;     // % of `entry` at which we call it arrived
+
+      var clockEl = curtainSec.querySelector('.curtain__clock');
+      var clock = clockEl && clockEl.getAnimations()[0];
+      if (!clock || !(clock.timeline instanceof ViewTimeline)) return;
+
+      // Every scroll-driven animation in the section except the clock itself,
+      // with the range each one was authored with.
+      var tracked = [];
+      curtainSec.getAnimations({ subtree: true }).forEach(function(a){
+        if (a === clock || !(a.timeline instanceof ViewTimeline)) return;
+        var s = a.rangeStart, e = a.rangeEnd;
+        if (!s || !e || !s.offset || !e.offset) return;
+        var from = s.offset.value, to = e.offset.value;
+        if (typeof from !== 'number' || typeof to !== 'number' || !(to > from)) return;
+        tracked.push({ anim: a, from: from, to: to, timeline: a.timeline });
+      });
+      if (!tracked.length) return;
+
+      try {
+        tracked.forEach(function(t){
+          t.anim.timeline = document.timeline;
+          t.anim.effect.updateTiming({ duration: DUR, fill: 'both' });
+          t.anim.pause();
+        });
+      } catch (err) {
+        // Hand the sequence back to the browser untouched rather than leave it
+        // half-converted and frozen.
+        tracked.forEach(function(t){
+          try { t.anim.timeline = t.timeline; } catch (e2) {}
+        });
+        return;
+      }
+
+      var targetPct = function(){
+        var p = clock.effect.getComputedTiming().progress;
+        return (p == null ? 0 : p) * CLOCK_SPAN;
+      };
+      var write = function(pct){
+        for (var i = 0; i < tracked.length; i++) {
+          var t = tracked[i];
+          var local = (pct - t.from) / (t.to - t.from);
+          t.anim.currentTime = (local < 0 ? 0 : local > 1 ? 1 : local) * DUR;
+        }
+      };
+
+      var shown = null, lastTs = 0, running = false;
+      var step = function(ts){
+        var target = targetPct();
+        // Frame-rate independent, and capped: a hard fling would otherwise leave
+        // the columns most of a screen behind, which stops reading as weight and
+        // starts reading as broken.
+        var dt = lastTs ? Math.min((ts - lastTs) / 1000, 0.05) : 1 / 60;
+        lastTs = ts;
+        var gap = target - shown;
+        if (gap > MAX_LAG) shown = target - MAX_LAG;
+        else if (gap < -MAX_LAG) shown = target + MAX_LAG;
+        shown += (target - shown) * (1 - Math.exp(-dt / TAU));
+        write(shown);
+        // The columns are still moving here with no scroll happening, so nothing
+        // else would re-run: the nav reads which column is under it to decide
+        // its own colour, and would hold a stale answer for the whole carry.
+        queueScrollFrame();
+        if (Math.abs(target - shown) > SETTLED) { requestAnimationFrame(step); return; }
+        // Arrived: land exactly on the true position and stop. No idle loop.
+        shown = target; write(shown); queueScrollFrame(); running = false; lastTs = 0;
+      };
+      var kick = function(){
+        if (shown === null) { shown = targetPct(); write(shown); }   // no catch-up on load
+        if (running) return;
+        // The gap check is what keeps this from free-running. step() asks the bus
+        // for a frame so the nav can follow the columns during the carry, and the
+        // bus calls back here — without this, those two would keep waking each
+        // other for the rest of the visit at a solid 60fps.
+        if (Math.abs(targetPct() - shown) <= SETTLED) return;
+        running = true; lastTs = 0; requestAnimationFrame(step);
+      };
+      kick();
+      onScroll(function(){ return null; }, kick);
+    };
+    if (document.readyState === 'complete') armCurtainMomentum();
+    else window.addEventListener('load', armCurtainMomentum, { once: true });
   }
 
   // General enquiry form: static site, no backend, builds a pre-filled mailto: link.
