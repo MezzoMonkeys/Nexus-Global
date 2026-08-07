@@ -388,10 +388,16 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
        position: it spans the screen exactly when its share of the range is done,
        whatever the section is doing and whatever the lag. It also makes the
        keyframes what they look like they should be.
-       pointer-events:none is load-bearing here: this box covers the whole
-       viewport for the rest of the page and would otherwise swallow every
-       click. Nothing shows through it because #where-we-work and the footer both
-       paint later in the document at the same z-index. */
+       Two consequences of being fixed, both load-bearing. pointer-events:none,
+       because this box covers the whole viewport for the rest of the page and
+       would otherwise swallow every click on it. And everything meant to appear
+       over it has to WIN ON z-index, not on document order: the columns sit
+       inside #footprint's stacking context, which the .stack ladder puts at 2,
+       so anything below that is painted over no matter how much later in the
+       document it comes. #where-we-work (3) and #spotlight (4) are fine by that
+       ladder; the footer was not, and had to be raised — see the rule on
+       .site-footer. Anything full-viewport added below z-index 2 will meet the
+       same problem. */
     .curtain__cols{display:flex;position:fixed;inset:0;z-index:0;pointer-events:none}
 
     /* The reference clock. A zero-sized box carrying one animation over a range
@@ -1001,14 +1007,22 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
 @media(max-width:640px){.enquiry-form__grid{grid-template-columns:1fr}}
 
 /* Footer */
-/* position+z-index here isn't decorative: on Home, .globe-stage (see its own
-   comment) is a position:fixed, full-viewport layer with z-index:0 — every
-   .stack section has its own explicit z-index so it paints above that fine,
-   but this plain static block otherwise falls into the "non-positioned
-   in-flow content" paint tier, which sits BELOW any positioned z-index:0
-   layer regardless of DOM order. Without this, the globe stage's opaque
-   ink background silently paints over the footer on Home only. */
-.site-footer{position:relative;z-index:1;overflow:hidden;background:var(--pine);color:var(--plat-70);padding:clamp(64px,7vw,104px) var(--pad) 34px;font-family:var(--font-body);font-size:14px}
+/* THE FOOTER MUST OUTRANK EVERY .stack SECTION. Read that as a rule, not as a
+   number to nudge.
+   Being last in the document is not enough, and this has now gone wrong twice
+   for the same underlying reason. The sections carry a per-page z-index ladder
+   (#footprint 2, #where-we-work 3, #spotlight 4 and so on, further up this
+   file), and each of them is a stacking context that can hold a position:fixed,
+   full-viewport layer — .globe-stage on Home, .curtain__cols on Network. A fixed
+   layer keeps covering the screen long after its own section's box has scrolled
+   past, so it meets the footer even though nothing in the layout overlaps it.
+   When that happens the ladder decides, and DOM order never gets a say.
+   z-index:1 was enough for the globe stage and stopped being enough the moment
+   the ladder climbed above it, which is how the Network footer disappeared
+   behind six platinum columns. 10 clears the ladder with room to grow, and
+   stays below the fixed chrome that is meant to float over the footer:
+   .back-to-top 40, .nav 50, .scroll-progress 51. */
+.site-footer{position:relative;z-index:10;overflow:hidden;background:var(--pine);color:var(--plat-70);padding:clamp(64px,7vw,104px) var(--pad) 34px;font-family:var(--font-body);font-size:14px}
 .site-footer a{color:var(--plat-70);transition:color .2s}
 .site-footer a:hover{color:var(--accent-light)}
 
