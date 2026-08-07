@@ -8,6 +8,54 @@
   const revealEls = document.querySelectorAll('.reveal');
   const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+  // Does the browser drive animations from scroll itself? Where it does, the
+  // progress bar below is animated entirely in CSS, off the main thread, and the
+  // JS task for it is never registered at all.
+  const nativeScrollTimeline = !!(window.CSS && CSS.supports && CSS.supports('animation-timeline: scroll()'));
+
+  // ── One scroll bus ───────────────────────────────────────────────────────
+  // Every scroll-driven effect on this page used to own its own listener — five
+  // of them — and three wrote to the DOM straight out of the event with no rAF
+  // throttle at all, so on a trackpad they ran at the event rate rather than the
+  // frame rate. The bigger cost was the ORDER: the nav theme measured every
+  // section's rect and then wrote classes, the progress bar then wrote a width,
+  // the hero then read pageYOffset and wrote transforms. Each write invalidated
+  // layout for the read behind it, so one scroll could force several full
+  // layouts — read/write thrash, on the same frames the globe is rendering.
+  //
+  // This is one passive listener and one rAF. A task registers a `measure`
+  // (reads only, returns a value) and an `apply` (writes only, receives it); the
+  // bus runs EVERY measure, then EVERY apply, so a frame costs one layout no
+  // matter how many effects are registered. The values each effect used to read
+  // for itself — scroll position, viewport height, document progress — are read
+  // once here and handed round.
+  var scrollTasks = [];
+  var scrollQueued = false;
+  var view = { y: 0, vh: 0, max: 0, progress: 0 };
+
+  function runScrollFrame(){
+    scrollQueued = false;
+    var doc = document.documentElement;
+    view.y = window.pageYOffset || doc.scrollTop || 0;
+    view.vh = window.innerHeight || doc.clientHeight || 800;
+    view.max = doc.scrollHeight - doc.clientHeight;
+    view.progress = view.max > 0 ? Math.min(Math.max(view.y / view.max, 0), 1) : 0;
+    var i;
+    for (i = 0; i < scrollTasks.length; i++) scrollTasks[i].value = scrollTasks[i].measure(view);
+    for (i = 0; i < scrollTasks.length; i++) scrollTasks[i].apply(scrollTasks[i].value, view);
+  }
+  function queueScrollFrame(){
+    if (!scrollQueued) { scrollQueued = true; requestAnimationFrame(runScrollFrame); }
+  }
+  function onScroll(measure, apply){
+    scrollTasks.push({ measure: measure, apply: apply, value: null });
+  }
+  window.addEventListener('scroll', queueScrollFrame, { passive: true });
+  window.addEventListener('resize', queueScrollFrame);
+  // Web fonts swap after first paint and move things by a few pixels; re-run once
+  // the page is fully loaded so every task is working from settled geometry.
+  window.addEventListener('load', queueScrollFrame);
+
   var setNavHeight = function(){
     document.documentElement.style.setProperty('--nav-h', nav.getBoundingClientRect().height + 'px');
   };
@@ -61,14 +109,46 @@
     });
   }
 
-  // Scroll reveal
+  // Scroll reveal.
+  //
+  // The trigger is a line across the viewport, not a fraction of the element.
+  // threshold:0.12 asked for 12% OF THE ELEMENT to be visible, which means a
+  // one-line eyebrow fires the moment its top edge clears the bottom of the
+  // screen while a full-height image panel has to be an eighth of the way up
+  // before it does — the same authored intent going off at different places on
+  // screen depending only on how tall the thing happens to be. Shrinking the
+  // root's bottom edge by 12% of the VIEWPORT instead gives one trigger line at
+  // 88% of screen height that everything crosses alike, so a column of mixed
+  // content reveals in the order you read it and always just above the fold.
+  //
+  // Each element is unobserved once shown: these are one-shot entrances, and
+  // re-running the callback on every later crossing was work for a class that
+  // was already set.
   if (revealEls.length && 'IntersectionObserver' in window) {
+    var pending = revealEls.length;
+    var showReveal = function(el){
+      if (el.classList.contains('in')) return;
+      el.classList.add('in');
+      pending--;
+    };
     var io = new IntersectionObserver(function(entries){
       entries.forEach(function(e){
-        if(e.isIntersecting){ e.target.classList.add('in'); }
+        if (!e.isIntersecting) return;
+        showReveal(e.target);
+        io.unobserve(e.target);
       });
-    },{threshold:0.12});
+    }, { threshold: 0, rootMargin: '0px 0px -12% 0px' });
     revealEls.forEach(function(el){ io.observe(el); });
+
+    // Safety net for the tail of the document. An element that comes to rest
+    // inside that bottom 12% at maximum scroll can never cross the trigger line —
+    // there is no scroll left to lift it — and would sit at opacity 0 forever,
+    // which is a blank hole in the page, not a missed animation. Once the page is
+    // scrolled to the end, show whatever is left.
+    onScroll(function(v){ return pending > 0 && v.progress > 0.995; }, function(atEnd){
+      if (!atEnd) return;
+      revealEls.forEach(function(el){ if (!el.classList.contains('in')) { showReveal(el); io.unobserve(el); } });
+    });
   }
 
   // Dark/light nav toggle. .stack sections are position:sticky with z-index
@@ -85,32 +165,39 @@
   // that's the one actually behind the nav right now.
   var sections = document.querySelectorAll('.page[id]');
   if (sections.length) {
-    var updateNavTheme = function(){
+    var navIsDark = null;
+    onScroll(function(){
       var probeY = nav.getBoundingClientRect().bottom;
       var front = sections[0];
       sections.forEach(function(s){
         if (s.getBoundingClientRect().top <= probeY) front = s;
       });
-      var isDark = front.classList.contains('page--dark');
+      return front.classList.contains('page--dark');
+    }, function(isDark){
+      // The class toggle is skipped unless the answer actually changed. Writing
+      // the same class back every frame is not free: it invalidates style for the
+      // nav and the progress bar, and both carry .35s colour transitions that a
+      // re-set can restart.
+      if (isDark === navIsDark) return;
+      navIsDark = isDark;
       nav.classList.toggle('dark', isDark);
       if (scrollProgress) scrollProgress.classList.toggle('dark', isDark);
-    };
-    window.addEventListener('scroll', updateNavTheme, { passive: true });
-    window.addEventListener('resize', updateNavTheme);
-    updateNavTheme();
+    });
   }
 
-  // Scroll-progress bar
-  if (scrollProgress) {
-    var updateProgress = function(){
-      var doc = document.documentElement;
-      var max = doc.scrollHeight - doc.clientHeight;
-      var pct = max > 0 ? (doc.scrollTop / max) * 100 : 0;
-      scrollProgress.style.width = pct + '%';
-    };
-    window.addEventListener('scroll', updateProgress, { passive: true });
-    window.addEventListener('resize', updateProgress);
-    updateProgress();
+  // Scroll-progress bar. Where the browser can drive an animation from scroll
+  // position itself the bar is animated in CSS against scroll(root) and runs on
+  // the compositor — nothing here participates at all. This is the fallback for
+  // browsers without scroll-driven animations, and it scales the fill rather than
+  // setting its width so it stays a composited transform in both paths.
+  var progressBar = scrollProgress && scrollProgress.querySelector('.scroll-progress__bar');
+  if (progressBar && !nativeScrollTimeline) {
+    var lastProgress = -1;
+    onScroll(function(v){ return v.progress; }, function(p){
+      if (Math.abs(p - lastProgress) < 0.0004) return;   // sub-pixel on a 4K screen
+      lastProgress = p;
+      progressBar.style.transform = 'scaleX(' + p.toFixed(5) + ')';
+    });
   }
 
   // Sliding nav indicator
@@ -177,11 +264,12 @@
   // Sticky back-to-top button
   var backToTop = document.getElementById('backToTop');
   if (backToTop) {
-    var toggleBackToTop = function(){
-      backToTop.classList.toggle('visible', window.scrollY > window.innerHeight * 0.6);
-    };
-    window.addEventListener('scroll', toggleBackToTop, { passive: true });
-    toggleBackToTop();
+    var backToTopShown = null;
+    onScroll(function(v){ return v.y > v.vh * 0.6; }, function(show){
+      if (show === backToTopShown) return;
+      backToTopShown = show;
+      backToTop.classList.toggle('visible', show);
+    });
     backToTop.addEventListener('click', function(){
       window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
     });
@@ -198,12 +286,26 @@
     var hGlow = heroAu.querySelector('.hero-au__glow');
     if (hGlow) hGlow.style.transition = 'none';
     if (hL && hR && !reduceMotion) {
-      var hTicking = false;
-      var updateHero = function(){
-        var p = Math.min(Math.max(window.pageYOffset / (window.innerHeight * 0.9), 0), 1);
-        var travel = window.innerWidth * 1.15;
-        hL.style.transform = 'translateX(' + (p * travel).toFixed(1) + 'px)';   // exits right
-        hR.style.transform = 'translateX(' + (-p * travel).toFixed(1) + 'px)';  // exits left
+      var lastHeroP = -1, lastHeroTravel = -1;
+      onScroll(function(v){
+        // Travel is measured here, in the read phase, and carried through to the
+        // write — not read again inside it. It also has to be part of what the
+        // cache below compares: p saturates at 1 for the whole rest of the page,
+        // so a window resize while the hero is off-screen would leave the lines
+        // parked at the old viewport's distance if only p were checked.
+        return {
+          p: Math.min(Math.max(v.y / (v.vh * 0.9), 0), 1),
+          travel: window.innerWidth * 1.15
+        };
+      }, function(m){
+        // Both ends of the range are flat: once the hero has fully exited, every
+        // further frame was rewriting an identical transform for the rest of the
+        // page. Bail unless something actually moved.
+        if (m.p === lastHeroP && m.travel === lastHeroTravel) return;
+        lastHeroP = m.p; lastHeroTravel = m.travel;
+        var p = m.p;
+        hL.style.transform = 'translateX(' + (p * m.travel).toFixed(1) + 'px)';   // exits right
+        hR.style.transform = 'translateX(' + (-p * m.travel).toFixed(1) + 'px)';  // exits left
         // The ambient glow was positioned to sit under the globe in its hero
         // (bottom-anchored) position, but it's a static CSS gradient, not tied
         // to the globe's own scroll-scrubbed reposition — left alone it stays
@@ -211,11 +313,7 @@
         // scrolls out. Fade it out over the same scroll range instead, so it
         // reads as leaving deliberately alongside the rest of the hero.
         if (hGlow) hGlow.style.opacity = Math.max(1 - p * 1.4, 0);
-        hTicking = false;
-      };
-      window.addEventListener('scroll', function(){ if(!hTicking){ requestAnimationFrame(updateHero); hTicking = true; } }, { passive: true });
-      window.addEventListener('resize', updateHero);
-      updateHero();
+      });
     }
   }
 
@@ -248,19 +346,23 @@
         }
         return 'M' + top.join('L') + 'L' + bottom.join('L') + 'Z';
       };
-      var lincorTicking = false;
-      var updateLincorWave = function(){
-        var vh = window.innerHeight || 800;
+      var lastSettled = -1;
+      onScroll(function(v){
         var rectTop = lincorSection.getBoundingClientRect().top;
-        var settled = 1 - Math.min(Math.max(rectTop / vh, 0), 1);   // 0 arriving -> 1 settled
+        var settled = 1 - Math.min(Math.max(rectTop / v.vh, 0), 1);   // 0 arriving -> 1 settled
+        // Quantised to 200 steps. Rebuilding the path means 50 sines, 50 toFixed
+        // calls and a ~700-character string, and the section spends most of the
+        // page pinned at settled === 1 where the answer is a flat rectangle that
+        // never changes. Rounding also means an unrelated scroll further down the
+        // page can't churn the path over differences too small to see.
+        return Math.round(settled * 200) / 200;
+      }, function(settled){
+        if (settled === lastSettled) return;
+        lastSettled = settled;
         var amp = 0.028 * (1 - settled);
         var phase = (1 - settled) * 1.2;
         lincorPath.setAttribute('d', buildWaveD(amp, phase, 2, 24));
-        lincorTicking = false;
-      };
-      window.addEventListener('scroll', function(){ if(!lincorTicking){ requestAnimationFrame(updateLincorWave); lincorTicking = true; } }, { passive: true });
-      window.addEventListener('resize', updateLincorWave);
-      updateLincorWave();
+      });
     }
   }
 
@@ -374,4 +476,11 @@
         + '&body=' + encodeURIComponent(body);
     });
   }
+
+  // Every effect above registered with the bus rather than priming itself. This
+  // is the one first run, and it has to be last: it puts all of them into the
+  // right state for the scroll position the page actually opened at, which is not
+  // necessarily the top — a reload part-way down or a #hash landing both start
+  // mid-document, and each task used to have to remember to call itself once.
+  runScrollFrame();
 })();
