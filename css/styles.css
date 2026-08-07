@@ -577,7 +577,13 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
    needs the animation; the second stays static and is simply uncovered
    when the first moves away. Each tile's --d2/--d3 modifier offsets its
    delay so the three tiles don't flip in unison. */
-.editorial-photo__img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;filter:grayscale(1) saturate(1) invert(.27) sepia(.07) saturate(10.67) hue-rotate(80deg) brightness(1.02) contrast(.83)}
+/* Black and white, nothing else. These used to carry a hue-rotate chain that
+   tinted them to the brand green, which put a third treatment of the accent on
+   a page that already uses it for the pill and the rules — and a duotone is a
+   costume on a photograph, not a colour choice. Plain greyscale lets the tiles
+   read as what they are: archive pictures set into the sentence. Matches
+   .content-split__video, which is greyscale for the same reason. */
+.editorial-photo__img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;filter:grayscale(1)}
 .editorial-photo__img:first-child{z-index:1;animation:editorialSwipe 7s ease-in-out infinite alternate}
 @keyframes editorialSwipe{
   0%,42%{transform:translateY(0)}
