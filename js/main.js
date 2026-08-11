@@ -621,23 +621,70 @@
     else window.addEventListener('load', armCurtainMomentum, { once: true });
   }
 
-  // General enquiry form: static site, no backend, builds a pre-filled mailto: link.
+  // General enquiry form. Posts to /api/enquiry.
+  //
+  // This used to hand the browser a mailto: link, which looks like it worked and
+  // frequently did nothing: no configured mail client, no send, no error, no
+  // record. The mailto is still here, but only as the last resort when the
+  // endpoint is unreachable, and it is now offered as a visible link the sender
+  // can choose rather than a navigation that happens to them.
   var enquiryForm = document.getElementById('enquiryForm');
+  var enquiryStatus = document.getElementById('enquiryStatus');
   if (enquiryForm) {
+    var submitBtn = enquiryForm.querySelector('[type="submit"]');
+    var FIELDS = ['name','company','email','phone','role','subject','message','website'];
+
+    var say = function(msg, kind){
+      if (!enquiryStatus) return;
+      enquiryStatus.textContent = msg;
+      enquiryStatus.setAttribute('data-state', kind || '');
+    };
+
+    var mailtoFallback = function(d){
+      var body = 'Name: ' + d.name + '\nCompany: ' + d.company + '\nEmail: ' + d.email
+        + (d.phone ? '\nPhone: ' + d.phone : '') + (d.role ? '\nI am a: ' + d.role : '') + '\n\n' + d.message;
+      return 'mailto:enquiries@nexusglobal.com'
+        + '?subject=' + encodeURIComponent('Enquiry: ' + (d.subject || 'General Partnership'))
+        + '&body=' + encodeURIComponent(body);
+    };
+
     enquiryForm.addEventListener('submit', function(e){
       e.preventDefault();
-      var name = enquiryForm.name.value.trim();
-      var company = enquiryForm.company.value.trim();
-      var email = enquiryForm.email.value.trim();
-      var phone = enquiryForm.phone ? enquiryForm.phone.value.trim() : '';
-      var role = enquiryForm.role ? enquiryForm.role.value.trim() : '';
-      var subject = enquiryForm.subject ? enquiryForm.subject.value.trim() : '';
-      var message = enquiryForm.message.value.trim();
-      var body = 'Name: ' + name + '\nCompany: ' + company + '\nEmail: ' + email
-        + (phone ? '\nPhone: ' + phone : '') + (role ? '\nI am a: ' + role : '') + '\n\n' + message;
-      window.location.href = 'mailto:enquiries@nexusglobal.com'
-        + '?subject=' + encodeURIComponent('Enquiry: ' + (subject || 'General Partnership'))
-        + '&body=' + encodeURIComponent(body);
+      var d = {};
+      FIELDS.forEach(function(f){ d[f] = enquiryForm[f] ? String(enquiryForm[f].value).trim() : ''; });
+
+      if (submitBtn) { submitBtn.disabled = true; }
+      say('Sending your enquiry…');
+
+      fetch('/api/enquiry', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(d)
+      }).then(function(r){
+        return r.json().catch(function(){ return {}; }).then(function(j){ return { ok: r.ok, body: j }; });
+      }).then(function(res){
+        if (res.ok && res.body.ok) {
+          enquiryForm.reset();
+          say('Thank you, we’ve got your enquiry and will reply within one to two business days.', 'ok');
+        } else {
+          throw new Error((res.body && res.body.error) || 'Request failed');
+        }
+      }).catch(function(){
+        // Endpoint unreachable or not yet configured. Keep what they typed, and
+        // give them a working route out instead of a dead end.
+        say('');
+        if (enquiryStatus) {
+          enquiryStatus.setAttribute('data-state', 'error');
+          enquiryStatus.textContent = 'We couldn’t send that automatically. Please email us directly at ';
+          var a = document.createElement('a');
+          a.href = mailtoFallback(d);
+          a.textContent = 'enquiries@nexusglobal.com';
+          enquiryStatus.appendChild(a);
+          enquiryStatus.appendChild(document.createTextNode(' — your message is attached to that link.'));
+        }
+      }).then(function(){
+        if (submitBtn) { submitBtn.disabled = false; }
+      });
     });
   }
 

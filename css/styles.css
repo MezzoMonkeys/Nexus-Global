@@ -1029,6 +1029,22 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
 .enquiry-form__field select option{color:#000}
 .enquiry-form__submit{grid-column:1 / -1;justify-self:start;margin-top:6px}
 @media(max-width:640px){.enquiry-form__grid{grid-template-columns:1fr}}
+/* Submission status. :empty collapses it entirely so the form's resting layout
+   is byte-for-byte what it was before this existed - the element is in the DOM
+   from first paint (a live region has to be present before text arrives in it,
+   or the announcement is lost) but occupies nothing until it has something to
+   say.
+   No red is introduced. The palette has no error colour - the "accent-red"
+   mentioned in the button comments is green in practice - and inventing one for
+   a single message is a bigger decision than this needs. Success takes
+   --accent-light; failure takes full-strength platinum, brighter than the
+   --plat-85 body text around it, and carries an underlined mailto so the way
+   out is a link rather than a colour. */
+.enquiry-form__status{grid-column:1 / -1;margin:0;font-size:14px;line-height:1.55;color:var(--plat-85)}
+.enquiry-form__status:empty{display:none}
+.enquiry-form__status[data-state="ok"]{color:var(--accent-light)}
+.enquiry-form__status[data-state="error"]{color:var(--platinum)}
+.enquiry-form__status a{color:inherit;text-decoration:underline;text-underline-offset:3px}
 
 /* Footer */
 /* THE FOOTER MUST OUTRANK EVERY .stack SECTION. Read that as a rule, not as a

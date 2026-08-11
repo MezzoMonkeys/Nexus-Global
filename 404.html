@@ -12,10 +12,34 @@
      there is no soft-404 risk. -->
 <meta name="robots" content="noindex, follow">
 <meta name="author" content="Nexus Global">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,400;0,500;0,600;0,700;0,900;1,400;1,500&display=optional" rel="stylesheet">
+<!-- Archivo is served from this origin now, so the two preconnects to Google
+     and the round-trip to fetch the @font-face CSS from a second host are gone.
+     The two preloads are the faces that render above the fold on every page
+     (500 carries body and labels, 900 the display headings); under
+     font-display:optional the font only gets used if it arrives inside a short
+     window, so preloading is what makes self-hosting actually pay. -->
+<link rel="preload" href="/fonts/archivo-n500-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/archivo-n900-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/css/fonts.css">
 <link rel="stylesheet" href="/css/styles.css">
+<!-- No-JS fallback. Three separate entrance effects park their content in a
+     hidden or off-screen START state and rely on js/main.js to release it:
+     .reveal sits at opacity:0, .line-reveal's inner span is translated out of
+     its mask, and the homepage H1's kinetic lines are pushed 118vw off-screen.
+     If main.js fails for any reason - a JS error, a blocked request, a renderer
+     that gives up early - the page is not merely unanimated, it is blank.
+     This has to be a <style> in <noscript> rather than an inline script that
+     sets a class: the CSP is script-src 'self' with no unsafe-inline, so an
+     inline script would simply be refused. It also cannot flash, because it is
+     never applied when scripting is on.
+     Every selector below is an exact copy of the one it overrides, so it wins on
+     source order alone and adds no specificity that could outrank the
+     prefers-reduced-motion block further down the stylesheet. -->
+<noscript><style>
+.reveal{opacity:1;transform:none}
+.line-reveal>span{transform:none}
+.hero-au:not(.hero-loaded) .kinetic-line--l .kinetic-line__inner,.hero-au:not(.hero-loaded) .kinetic-line--r .kinetic-line__inner{transform:none}
+</style></noscript>
 <link rel="icon" href="/IMAGERY/DarkFavicon.svg" type="image/svg+xml">
 </head>
 <body>

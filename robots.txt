@@ -1,6 +1,57 @@
+# Everything below is the default behaviour written down. Nothing here opens up
+# access that wasn't already open — the point is that the intent is now explicit,
+# so a later blanket Disallow can't silently cut off AI search visibility, which
+# is the failure mode that is easy to introduce and very hard to notice.
+
 User-agent: *
 Allow: /
 Disallow: /ASSETS/
 Disallow: /docs/
+
+# AI answer engines and their training crawlers, allowed deliberately.
+# Two different jobs are grouped here and it is worth keeping them straight:
+#   - OAI-SearchBot, ChatGPT-User, PerplexityBot and Claude-User fetch pages to
+#     answer a live question, and are the ones that produce a citation.
+#   - GPTBot, ClaudeBot, CCBot and Google-Extended feed training and grounding
+#     corpora. They earn no immediate citation but are how a model comes to know
+#     the company exists at all.
+# Google-Extended does NOT control AI Overviews — those follow ordinary Googlebot
+# rules — so removing it would not take the site out of AI Overviews.
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: GPTBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Claude-User
+Allow: /
+
+User-agent: Claude-SearchBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Perplexity-User
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+User-agent: meta-externalagent
+Allow: /
 
 Sitemap: https://www.nexusglobal.com/sitemap.xml
