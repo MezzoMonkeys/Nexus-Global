@@ -1,0 +1,25 @@
+# Nothing here is referenced by the site, and every path below is publicly
+# fetchable once deployed. Keeping them out of the build is the fix; the
+# X-Robots-Tag rules in vercel.json are the second line of defence in case
+# this file is ever dropped.
+
+# Internal design specs. Not public writing, and thin duplicate content if
+# indexed.
+docs/
+
+# Brand source: the Illustrator master, the intro .docx, the site map, and
+# "Website Copy.md" — which is the entire site's copy in plaintext and would
+# read to a crawler as a perfect duplicate of all four pages.
+ASSETS/
+
+# Raw video masters. Gitignored already, but a local working copy would
+# otherwise still be uploaded from the working tree.
+VIDEOS/hf_*
+
+# Windows thumbnail cache.
+Thumbs.db
+**/Thumbs.db
+
+# Editor/workspace files.
+nexus-global.code-workspace
+.claude/

@@ -1,9 +1,6 @@
 {
-  "rewrites": [
-    { "source": "/about", "destination": "/about.html" },
-    { "source": "/network", "destination": "/network.html" },
-    { "source": "/contact", "destination": "/contact.html" }
-  ],
+  "cleanUrls": true,
+  "trailingSlash": false,
   "headers": [
     {
       "source": "/(.*)",
@@ -23,8 +20,14 @@
       ]
     },
     {
+      "source": "/(docs|ASSETS)/(.*)",
+      "headers": [
+        { "key": "X-Robots-Tag", "value": "noindex, nofollow" }
+      ]
+    },
+    {
       "source": "/(.*)",
-      "has": [{ "type": "host", "value": "nexus-global.vercel.app" }],
+      "has": [{ "type": "host", "value": ".*\\.vercel\\.app" }],
       "headers": [
         { "key": "X-Robots-Tag", "value": "noindex, nofollow" }
       ]
