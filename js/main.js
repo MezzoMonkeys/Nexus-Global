@@ -81,11 +81,44 @@
   // read as a jump. #cover is designed to fit one viewport and needs no offset
   // anyway, so excluding it costs nothing.
   var stackEls = document.querySelectorAll('.stack:not(#cover)');
+
+  // BOTH SIDES OF THIS SUBTRACTION MUST BE THE SAME UNIT, and that is the whole
+  // bug this replaces. The sections are sized by CSS: .page is min-height:100vh.
+  // On a phone 100vh is the LARGE viewport - the height with the URL bar
+  // collapsed - and it deliberately does not change when that bar slides in and
+  // out. window.innerHeight is the VISUAL viewport and does change, by 60-100px,
+  // every time the bar moves, which on a phone is constantly and in both
+  // directions as you scroll.
+  // Mixing them meant -(height - innerHeight) was recomputed against a number
+  // that moved on its own, so --pin-top was rewritten mid-scroll and every
+  // stuck panel stepped vertically by exactly the URL bar's height with no
+  // scrolling involved. Measured on network.html: a 60px viewport change moved
+  // #footprint, #where-we-work and #spotlight 60px each, instantly. Because the
+  // bar collapses scrolling down and returns scrolling up, it read as a repeated
+  // catch-and-step rather than a one-off.
+  // Reading 100vh through a probe element gives exactly the value the CSS used,
+  // so the arithmetic is stable and a URL-bar resize now computes an identical
+  // result and writes nothing.
+  var vhProbe = document.createElement('div');
+  vhProbe.style.cssText = 'position:absolute;top:0;left:0;width:0;height:100vh;visibility:hidden;pointer-events:none';
+  var readVh = function(){
+    document.body.appendChild(vhProbe);
+    var h = vhProbe.getBoundingClientRect().height;
+    vhProbe.parentNode.removeChild(vhProbe);
+    return h || window.innerHeight || 800;
+  };
+
   var updateStackOffsets = function(){
-    var vh = window.innerHeight || 800;
+    var vh = readVh();
     stackEls.forEach(function(el){
       var h = el.getBoundingClientRect().height;
-      el.style.setProperty('--pin-top', (h > vh ? -(h - vh) : 0) + 'px');
+      var next = (h > vh ? -(h - vh) : 0) + 'px';
+      // Write only on a real change. A no-op write is harmless in itself, but
+      // this keeps a stray resize from ever touching a panel that is currently
+      // stuck, which is the state where any change to top is visible as a jump.
+      if (el.style.getPropertyValue('--pin-top') !== next) {
+        el.style.setProperty('--pin-top', next);
+      }
     });
   };
   if (stackEls.length) {
