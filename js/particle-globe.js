@@ -111,7 +111,10 @@
     '}'
   ].join('\n');
 
-  fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json')
+  // Same-origin now (was jsdelivr). Rides the open connection instead of paying
+  // a fresh DNS + TLS handshake, and can't be blocked by a proxy that allows the
+  // site but not the CDN. Pinned copy of world-atlas@2.
+  fetch('/js/data/countries-110m.json')
     .then(function(r){ return r.json(); })
     .then(function(world){
       var landF = topojson.feature(world, world.objects.countries);

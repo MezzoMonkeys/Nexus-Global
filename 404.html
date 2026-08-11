@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Page Not Found, Nexus Global</title>
+<meta name="description" content="That page could not be found. Browse Nexus Global's about, network and contact pages, or return to the homepage.">
+<!-- noindex, but NOT nofollow: the links out of this page are the recovery path
+     for anyone - crawler or person - who arrived on a dead URL, and nofollow
+     would throw that away. Vercel serves this automatically for unmatched
+     routes on a static deployment and returns a real 404 status with it, so
+     there is no soft-404 risk. -->
+<meta name="robots" content="noindex, follow">
+<meta name="author" content="Nexus Global">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,400;0,500;0,600;0,700;0,900;1,400;1,500&display=optional" rel="stylesheet">
+<link rel="stylesheet" href="/css/styles.css">
+<link rel="icon" href="/IMAGERY/DarkFavicon.svg" type="image/svg+xml">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to main content</a>
+
+<header class="nav" id="nav" role="banner">
+  <a class="nav__brand" href="/" aria-label="Nexus Global, Home">
+    <span class="nav__logo">
+      <img class="nav__logo-img nav__logo-img--on-light" src="/IMAGERY/DarkFavicon.svg" alt="" aria-hidden="true" width="34" height="34">
+      <img class="nav__logo-img nav__logo-img--on-dark" src="/IMAGERY/LightFavicon.svg" alt="" aria-hidden="true" width="34" height="34">
+    </span>
+  </a>
+  <nav class="nav__links" id="navLinks" aria-label="Main navigation">
+    <span class="nav__indicator" aria-hidden="true"></span>
+      <a href="/about">About</a>
+    <a href="/network">Network &amp; Markets</a>
+    <a href="/contact">Contact</a>
+  </nav>
+  <button class="nav__menu-btn" id="menuBtn" aria-controls="navMenu" aria-expanded="false" aria-label="Open navigation menu">Menu</button>
+</header>
+<div class="scroll-progress" id="scrollProgress" aria-hidden="true"><span class="scroll-progress__bar"></span></div>
+<nav class="nav__menu" id="navMenu" aria-hidden="true" aria-label="Mobile navigation">
+  <a href="/about">About</a>
+  <a href="/network">Network &amp; Markets</a>
+  <a href="/contact">Contact</a>
+</nav>
+
+<main id="main">
+
+<!-- Built entirely from components that already exist elsewhere on the site:
+     the .page--dark cover section and .motif from the Network hero, .label-pill,
+     .hero__h with the masked line reveal, .hero__sub, and the one button variant
+     that carries its own colour (.btn-pill--fill). Nothing new is styled here, so
+     this page inherits every later change to those components for free. -->
+<section class="page page--dark stack" id="cover">
+  <div class="motif" aria-hidden="true"><svg viewBox="0 0 1000 700" preserveAspectRatio="xMidYMid slice">
+    <circle cx="760" cy="180" r="300"/>
+    <ellipse cx="220" cy="560" rx="380" ry="170"/>
+  </svg></div>
+  <div class="page__inner">
+    <div class="hero">
+      <span class="label-pill hero__pill reveal"><span class="dot"></span>404</span>
+      <h1 class="hero__h reveal reveal-d2">
+        <span class="line-reveal"><span>This Page</span></span>
+        <span class="line-reveal line-reveal-d2"><span>Isn't Here</span></span>
+      </h1>
+      <p class="hero__sub reveal reveal-d3">The link may be out of date, or the page may have moved. Everything else is still where you left it, use the menu above, or head back to the homepage.</p>
+      <div class="statement__actions reveal reveal-d4">
+        <a href="/" class="btn-pill btn-pill--fill">Back to Home</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="site-footer" role="contentinfo">
+  <div class="footer-flow" aria-hidden="true">
+    <span class="footer-flow__blob footer-flow__blob--1"></span>
+    <span class="footer-flow__blob footer-flow__blob--2"></span>
+    <span class="footer-flow__blob footer-flow__blob--3"></span>
+    <span class="footer-flow__blob footer-flow__blob--4"></span>
+    <svg class="footer-flow__caustics" viewBox="0 0 1440 620" preserveAspectRatio="xMidYMid slice">
+      <defs>
+        <linearGradient id="footerCaustic1" x1="0" y1="0" x2="1440" y2="620" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stop-color="#12b37d" stop-opacity="0"/>
+          <stop offset=".42" stop-color="#a8f0d2" stop-opacity=".55"/>
+          <stop offset="1" stop-color="#12b37d" stop-opacity="0"/>
+        </linearGradient>
+        <linearGradient id="footerCaustic2" x1="1440" y1="0" x2="0" y2="620" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stop-color="#12b37d" stop-opacity="0"/>
+          <stop offset=".5" stop-color="#8fe6c4" stop-opacity=".38"/>
+          <stop offset="1" stop-color="#12b37d" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      <g class="footer-flow__pp footer-flow__pp--a">
+        <g class="footer-flow__caustic-a" stroke="url(#footerCaustic1)">
+          <path d="M-120,470 C220,300 430,560 760,360 C1000,215 1240,330 1560,150"/>
+          <path d="M-120,545 C240,360 470,620 800,410 C1050,255 1280,380 1560,205"/>
+        </g>
+      </g>
+      <g class="footer-flow__pp footer-flow__pp--b">
+        <g class="footer-flow__caustic-b" stroke="url(#footerCaustic2)">
+          <path d="M-120,250 C260,420 520,120 820,330 C1080,510 1300,240 1560,420"/>
+        </g>
+      </g>
+    </svg>
+  </div>
+
+  <div class="footer__inner">
+    <div class="footer__top">
+      <p class="footer__lead">Deep roots in China, built for Africa.</p>
+      <div class="footer__cols">
+        <nav class="footer__col" aria-label="Footer navigation">
+          <p class="footer__col-h">Pages</p>
+          <a href="/about">About</a>
+          <a href="/network">Network &amp; Markets</a>
+          <a href="/contact">Contact</a>
+        </nav>
+        <div class="footer__col">
+          <p class="footer__col-h">Head office</p>
+          <p>Unit B, 17th Floor<br>United Centre, 95 Queensway<br>Admiralty, Hong Kong</p>
+        </div>
+        <div class="footer__col">
+          <p class="footer__col-h">Get in touch</p>
+          <a href="tel:+85221512260">+852 2151 2260</a>
+          <a href="tel:+27761083699">+27 76 108 3699</a>
+          <a href="mailto:enquiries@nexusglobal.com">enquiries@nexusglobal.com</a>
+        </div>
+      </div>
+    </div>
+
+    <a class="footer__logo" href="/" aria-label="Nexus Global, home">
+      <img src="/IMAGERY/LightLogoStraight.svg" alt="Nexus Global" width="790" height="128">
+    </a>
+
+    <div class="footer__base">
+      <span>&copy; 2026 Nexus Global &middot; A Lincor Company</span>
+      <span>Nexus Global is a subsidiary of Lincor &middot; Registered in Hong Kong</span>
+    </div>
+  </div>
+</footer>
+<button class="back-to-top arrow-btn" id="backToTop" aria-label="Back to top">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+</button>
+<script defer src="/js/main.js"></script>
+</body>
+</html>
