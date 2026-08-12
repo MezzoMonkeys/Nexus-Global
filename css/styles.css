@@ -1404,6 +1404,30 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
 /* padding-right clears the fixed back-to-top button in the corner */
 .footer__base{display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap;padding-top:20px;padding-right:64px;border-top:1px solid var(--plat-10);font-family:var(--font-label);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--plat-70)}
 
+/* The build credit: a line of type that ends in a logo rather than a word, so
+   the two have to sit on one line and read as one sentence.
+   inline-flex + align-items:center rather than an inline image on the baseline.
+   A baseline-aligned image aligns its BOTTOM EDGE to the baseline, which would
+   hang the whole lockup - including the "COLLECTIVE" line under the wordmark -
+   above the text it follows. Centring the mark against the line box is what
+   makes it read as part of the sentence.
+   The gap is in em, so it tracks the 10.5px type rather than being a fixed
+   number that drifts if the footer size ever changes.
+   22px is chosen from the artwork, not picked to match the type. The lockup is
+   two lines - the wordmark is the top 64% of it and "COLLECTIVE" the bottom 26%
+   - so the small line is about a quarter of whatever height is set here. At 20px
+   that line falls to ~5px and stops resolving as letters; at 28px "mezzo" is
+   nearly three times the cap height of the sentence and reads as a badge stuck
+   on the end rather than the end of the sentence. 22px is where both hold.
+   The wordmark still lands taller than the 10.5px caps beside it, which is the
+   right relationship - a logo scaled to the exact cap height of microtype reads
+   as shrunken.
+   line-height:0 on the picture stops the inline box adding a descender's worth
+   of space under the image and pushing the flex centring off. */
+.footer__credit{display:inline-flex;align-items:center;gap:.75em}
+.footer__credit picture{display:block;line-height:0}
+.footer__credit img{height:22px;width:auto;display:block}
+
 @media(max-width:760px){
   .footer__cols{margin-left:0;gap:28px 40px}
   .footer__lead{max-width:100%}

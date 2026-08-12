@@ -14,3 +14,9 @@ VIDEOS/hf_*
 # 100KB. Keep the master locally or in shared storage so a re-encode at a
 # different size is always possible.
 IMAGERY/attivo_freestand_bath_mixer__black_camera_png.jpg
+
+# Mezzo Collective logo master, same reasoning again. 4500x4500 with the lockup
+# floating in the middle of it, so about 84% of the file is transparent padding.
+# What the site serves is mezzo-collective.webp/.png beside it: cropped to the
+# ink at 228px wide, 4KB and 5KB. Keep the master locally or in shared storage.
+IMAGERY/MEZZOC_LOGO-02.png
