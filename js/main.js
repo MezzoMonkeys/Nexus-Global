@@ -57,11 +57,32 @@
   // the page is fully loaded so every task is working from settled geometry.
   window.addEventListener('load', queueScrollFrame);
 
+  // The same rAF coalescing for resize, and for the same reason the scroll bus
+  // above exists. resize fires many times a second during a window drag, and
+  // every handler registered here measures - which forces synchronous layout on
+  // each call. Measured before this: 20 resize steps ran ~200
+  // getBoundingClientRect calls. Coalesced, a burst of any density costs one
+  // batch per frame.
+  // It matters most on a phone, where the thing firing resize is the URL bar
+  // sliding in and out DURING a scroll - so the unthrottled version was doing
+  // forced layout on the exact hot path the pin-offset work was written to keep
+  // clear.
+  var resizeTasks = [];
+  var resizeQueued = false;
+  function runResizeFrame(){
+    resizeQueued = false;
+    for (var i = 0; i < resizeTasks.length; i++) resizeTasks[i]();
+  }
+  function onResize(fn){ resizeTasks.push(fn); }
+  window.addEventListener('resize', function(){
+    if (!resizeQueued) { resizeQueued = true; requestAnimationFrame(runResizeFrame); }
+  });
+
   var setNavHeight = function(){
     document.documentElement.style.setProperty('--nav-h', nav.getBoundingClientRect().height + 'px');
   };
   setNavHeight();
-  window.addEventListener('resize', setNavHeight);
+  onResize(setNavHeight);
 
   // Pinned-panel offsets: a .stack section taller than one viewport shouldn't
   // freeze the moment it reaches the top (that would hide everything past the
@@ -124,7 +145,7 @@
   if (stackEls.length) {
     updateStackOffsets();
     window.addEventListener('load', updateStackOffsets);
-    window.addEventListener('resize', updateStackOffsets);
+    onResize(updateStackOffsets);
   }
 
   // Mobile menu
@@ -303,21 +324,22 @@
         a.addEventListener('mouseenter', function(){ moveIndicatorTo(a); setInverted(a); });
       });
       navLinksEl.addEventListener('mouseleave', function(){ moveIndicatorTo(activeLink); setInverted(activeLink); });
-      window.addEventListener('resize', function(){
+      onResize(function(){
         moveIndicatorTo(navLinksEl.querySelector('a.pill-active') || activeLink);
       });
     }
   }
 
-  // Cursor-spotlight glow
-  var spotlightEls = document.querySelectorAll('.spotlight');
-  spotlightEls.forEach(function(card){
-    card.addEventListener('mousemove', function(e){
-      var rect = card.getBoundingClientRect();
-      card.style.setProperty('--spot-x', ((e.clientX - rect.left) / rect.width * 100) + '%');
-      card.style.setProperty('--spot-y', ((e.clientY - rect.top) / rect.height * 100) + '%');
-    });
-  });
+  // The cursor-spotlight tracker used to live here: a mousemove listener on
+  // every .spotlight element writing --spot-x/--spot-y so a radial glow could
+  // follow the pointer. The glow was removed when the containers moved to the
+  // dark surface - a second light appearing under the cursor competed with the
+  // one that shifts on hover - and nothing has read those two properties since.
+  // The listener kept running regardless: measured at 2 style writes per pointer
+  // move, on each of 14 elements, every value discarded.
+  // Removed rather than left in place. Restoring it is a dozen lines, and it is
+  // not worth paying for a mousemove handler on the chance the effect comes
+  // back. (The class it hung off is now .surface, for the same reason.)
 
   // Magnetic pull on arrow buttons
   var magneticBtns = document.querySelectorAll('.arrow-btn');
@@ -700,6 +722,37 @@
       }
     };
     wrapChars(typeEl);
+
+    // Hand assistive technology the sentence, not the letters.
+    //
+    // Splitting a paragraph into one span per character does not just look like
+    // a rendering detail to a screen reader - it changes what the accessibility
+    // tree contains. Measured on this paragraph before this block existed: 353
+    // single-character StaticText nodes and NOT ONE node carrying the sentence,
+    // so anything reading the tree gets the text letter by letter.
+    //
+    // aria-label on the <p> is not the fix. ARIA prohibits naming role=paragraph
+    // and browsers ignore it there, so it would look correct in the markup and
+    // do nothing. Instead the split characters are marked presentational and a
+    // visually-hidden copy of the original text carries the meaning - the same
+    // arrangement text-splitting libraries settle on, for the same reason.
+    //
+    // Built here rather than written into about.html so the served HTML stays a
+    // single clean paragraph: a crawler that does not run scripts, and the
+    // no-JS reader, both still get exactly one copy of the text.
+    var plainText = typeEl.textContent;
+    var visual = document.createElement('span');
+    visual.setAttribute('aria-hidden', 'true');
+    while (typeEl.firstChild) { visual.appendChild(typeEl.firstChild); }
+    var srCopy = document.createElement('span');
+    srCopy.className = 'sr-only';
+    srCopy.textContent = plainText;
+    typeEl.appendChild(srCopy);
+    typeEl.appendChild(visual);
+
+    // Queried after the move, not before: the node is the same one either way,
+    // but reading it from its final home is what keeps this correct if the
+    // structure above is ever rearranged again.
     var highlight = typeEl.querySelector('.c2g-hl');
 
     // ~165 characters a second puts this paragraph at about 2.6s. Slower reads

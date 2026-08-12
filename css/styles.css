@@ -21,13 +21,8 @@
      can be retoned in one place. */
   --offwhite:#FDFCF8;
   --pine:#1c2b27;
-  --graphite:#303033;
-  --slate:#676768;
-  --smoke:#bfbfbf;
-  --ink-04:rgba(28,28,30,.04);
   --ink-06:rgba(28,28,30,.06);
   --ink-10:rgba(28,28,30,.10);
-  --ink-18:rgba(28,28,30,.18);
   --ink-30:rgba(28,28,30,.30);
   --ink-40:rgba(28,28,30,.40);
   --ink-55:rgba(28,28,30,.55);
@@ -42,7 +37,6 @@
   --plat-55:rgba(237,237,237,.55);
   --plat-70:rgba(237,237,237,.70);
   --plat-85:rgba(237,237,237,.85);
-  --ink-rgb:28,28,30;
   --plat-rgb:237,237,237;
   --pine-rgb:28,43,39;
   --accent:#0b835c;
@@ -64,10 +58,8 @@
   --container:1240px;
   --pad:clamp(20px,4vw,52px);
   --hairline:1px solid var(--ink-10);
-  --hairline-dark:1px solid var(--plat-18);
   --nav-h:64px;
   --radius-card:28px;
-  --radius-card-lg:44px;
   --font-display:'Archivo',ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
   --font-body:'Archivo',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
   --font-label:'Archivo',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
@@ -315,6 +307,10 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
    assemble line by line; at the .075s card rhythm the lines arrive so nearly
    together that it just looks like the whole heading wobbled. */
 .reveal.in .line-reveal.line-reveal-d2>span{transition-delay:.12s}
+/* -d3 is currently unapplied - every line-reveal on the site is two lines. Kept
+   deliberately: it is the third step of a scale, not an orphan, and a heading
+   that grows a third line would otherwise silently get no stagger at all. Left
+   here so a dead-code sweep does not keep rediscovering it. */
 .reveal.in .line-reveal.line-reveal-d3>span{transition-delay:.24s}
 
 @media (prefers-reduced-motion: reduce){
@@ -327,15 +323,16 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
   .line-reveal>span,.reveal.in .line-reveal>span{transform:none;transition:none}
 }
 
-/* .spotlight is now only the positioning context and the clip for the light on
-   ::before (see the container-surface block further down). The cursor-following
-   ::after glow it is named for is gone: on the black surface the containers now
-   use, a second light that appears under the pointer competes with the pool
-   that shifts on hover, and the brief for that surface is one subtle light per
-   container. main.js still writes --spot-x/--spot-y on every .spotlight element
-   on mousemove; nothing reads them any more, so that listener is now dead and
-   is the thing to remove if the glow is not coming back. */
-.spotlight{position:relative;overflow:hidden}
+/* .surface marks a container that carries the dark surface treatment: it
+   provides the positioning context and the clip that keeps the light on
+   ::before inside the rounded corners (see the container-surface block further
+   down, which is where everything visible about it is defined).
+   It was called .spotlight until the cursor-following ::after glow was removed,
+   at which point the name described a behaviour the class no longer had. Note
+   that network.html has an unrelated SECTION with id="spotlight"; the two never
+   had anything to do with each other, which is part of why the old name was
+   worth losing. */
+.surface{position:relative;overflow:hidden}
 
 /* Buttons — every one converges on the same accent-red hover/active state
    regardless of variant or light/dark page context, so this is one visual
@@ -696,16 +693,6 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
   .editorial-photo__img:first-child{animation:none;transform:none}
 }
 
-/* Split hero, asymmetric layout for page covers other than the homepage: text left,
-   a page-specific feature panel right, instead of every page repeating the same
-   centered pill+headline+paragraph block. */
-.hero--split{flex-direction:row;align-items:center;justify-content:space-between;gap:56px;flex-wrap:wrap}
-.hero--split .hero__col{display:flex;flex-direction:column;align-items:flex-start;text-align:left;flex:1 1 420px;max-width:640px}
-.hero--split .hero__pill{margin-bottom:24px}
-.hero--split .hero__h{font-size:clamp(32px,4vw,52px);line-height:1.05;margin-bottom:20px}
-.hero--split .hero__sub{margin:0;text-align:left}
-@media(max-width:900px){.hero--split{flex-direction:column;text-align:center}.hero--split .hero__col{align-items:center;text-align:center;max-width:100%}.hero--split .hero__sub{text-align:center}}
-
 /* Text-left/image-right content block (About's "Our story"). Text sits in
    normal flow at its own max-width; the image is the full-bleed variant
    below, not a shared flex row with the text — there's no plain side-by-
@@ -848,7 +835,7 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
 /* ── The container surface ──────────────────────────────────────────────────
    Every boxed container on the site sits on this one treatment: near-black,
    white text, accent-green icons, and a soft pool of light that shifts on
-   hover (the light itself is the .spotlight::before block below). That is
+   hover (the light itself is the .surface::before block below). That is
    .card (about's capabilities grid, network's footprint grid) and
    .process__step (network's how-it-works blocks) — the same surface component
    wearing two internal layouts, so they share one rule rather than drifting
@@ -900,7 +887,7 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
    Everything that served the old system went with it: three @keyframes, the
    nth-of-type desync that stopped neighbouring cards animating in phase, the
    .page--dark inversion, and the cursor-following ::after glow. .card and
-   .process__step are the only elements on the site carrying .spotlight, so none
+   .process__step are the only elements on the site carrying .surface, so none
    of it was reachable any more.
    Sizes are in PERCENTAGES of the layer, not the element, and the layer is
    inset:-30% — so a 55% pool is ~0.55 × 1.6 = 88% of the container's width, a
@@ -911,12 +898,12 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
    are already smooth — but to break up the stair-stepping a low-alpha gradient
    shows when it stretches over several hundred pixels of near-black, which is
    what the grain used to hide.
-   Lives on ::before; .spotlight provides the position:relative and the
+   Lives on ::before; .surface provides the position:relative and the
    overflow:hidden that clips the pools to the rounded corners. Direct children
    are pushed to their own stacking layer so text and icons sit above it. */
-.spotlight{isolation:isolate}
-.spotlight>*{position:relative;z-index:1}
-.spotlight::before{
+.surface{isolation:isolate}
+.surface>*{position:relative;z-index:1}
+.surface::before{
   content:"";
   position:absolute;
   inset:-30%;
@@ -938,7 +925,7 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
    below instead of needing a matching hover pair for each.
    ~20px on a ~440px card. Enough to notice returning to a card you have already
    passed over, not enough to look like a separate animation. */
-.spotlight:hover::before{transform:translate(20px,-15px)}
+.surface:hover::before{transform:translate(20px,-15px)}
 
 /* Placement variants, so a grid of six does not read as six copies of one
    asset. nth-of-type cycles in fours; every container in a grid is a div among
@@ -951,20 +938,20 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
    opposite — and only moves where they sit, which is what stops the set looking
    patterned while keeping it obviously one family. The hover offsets push each
    pair further into its own corner rather than all sliding the same way. */
-.spotlight:nth-of-type(4n+2)::before{background-position:86% 10%,10% 88%}
-.spotlight:nth-of-type(4n+3)::before{background-position:20% 94%,92% 14%}
-.spotlight:nth-of-type(4n+4)::before{background-position:92% 88%,12% 10%}
-.spotlight:nth-of-type(4n+2):hover::before{transform:translate(-22px,17px)}
-.spotlight:nth-of-type(4n+3):hover::before{transform:translate(18px,20px)}
-.spotlight:nth-of-type(4n+4):hover::before{transform:translate(-20px,-16px)}
+.surface:nth-of-type(4n+2)::before{background-position:86% 10%,10% 88%}
+.surface:nth-of-type(4n+3)::before{background-position:20% 94%,92% 14%}
+.surface:nth-of-type(4n+4)::before{background-position:92% 88%,12% 10%}
+.surface:nth-of-type(4n+2):hover::before{transform:translate(-22px,17px)}
+.surface:nth-of-type(4n+3):hover::before{transform:translate(18px,20px)}
+.surface:nth-of-type(4n+4):hover::before{transform:translate(-20px,-16px)}
 
 @media (prefers-reduced-motion: reduce){
   /* Including the hover shift. It is small and user-initiated, but it is still
      motion, and the rest of this file honours the preference literally. */
-  .spotlight::before,.spotlight:hover::before,
-  .spotlight:nth-of-type(4n+2):hover::before,
-  .spotlight:nth-of-type(4n+3):hover::before,
-  .spotlight:nth-of-type(4n+4):hover::before{transform:none;transition:none}
+  .surface::before,.surface:hover::before,
+  .surface:nth-of-type(4n+2):hover::before,
+  .surface:nth-of-type(4n+3):hover::before,
+  .surface:nth-of-type(4n+4):hover::before{transform:none;transition:none}
 }
 
 .card h3,.card h4{font-size:19px;letter-spacing:-0.01em;line-height:1.25;color:var(--platinum)}
@@ -973,7 +960,6 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
    differ in colour, only in size and weight. */
 .card p{font-family:var(--font-body);font-size:14px;line-height:1.6;color:var(--plat-85);margin:0}
 
-.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
 /* ── Cradle to Grave (about.html) ────────────────────────────────────────── */
 
 /* The title statement. Centred and given room, because it is the only thing in
@@ -1097,7 +1083,7 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
 .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
 .grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
 @media(max-width:980px){.grid-3{grid-template-columns:1fr 1fr}.grid-4{grid-template-columns:1fr 1fr}}
-@media(max-width:640px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr}}
+@media(max-width:640px){.grid-3,.grid-4{grid-template-columns:1fr}}
 
 
 /* ── Homepage: image-led sections ───────────────────────────────────────────
@@ -1187,7 +1173,7 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
 
 /* Centred statement band. Image, nothing competing. The grain keeps the
    surrounding empty space from reading as inert — the same achromatic
-   noise the .spotlight cards use, here on its own ::before rather than
+   noise the .surface cards use, here on its own ::before rather than
    blended into the section's own background: soft-light against a near-
    white platinum base crushed the noise to a couple of imperceptible
    levels, so this needs direct opacity control instead. z-index:0 keeps
