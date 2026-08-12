@@ -239,6 +239,28 @@ a{color:inherit;text-decoration:none}
    left 192px between the sub-line and the image below, against 111px here. The
    two blocks are one thought and should not read as two screens. */
 #cradle.page--flow{min-height:60vh;justify-content:center;padding-bottom:clamp(16px,2vh,28px)}
+/* Phones drop the viewport height entirely.
+   The 60vh above buys presence on a wide screen, where the heading is 237px tall
+   and fills most of it. On a phone the heading wraps to two short lines and the
+   whole block is about 136px - so 60vh reserves ~506px for it and .page__inner,
+   which is flex:1 and centres, splits the ~240px left over evenly above and
+   below. That slack is invisible in the CSS and it is most of the problem:
+   measured at 390px wide, the gap above the heading was 233px, of which only 112
+   was the padding actually written down. The rest was centring air.
+   min-height:0 removes the slack at its source rather than trying to cancel it
+   with negative margins, which leaves the padding below meaning what it says.
+   The top padding still clears the fixed nav - that bar ends at y=50 on a phone,
+   so the 76px floor keeps the heading clear of it even at the one scroll
+   position where this section's top edge meets the top of the screen.
+   860px, matching .c2g-split below rather than picking a new number: that is
+   where the image and the paragraph stop sitting side by side, and this heading
+   belongs to the same block. Two breakpoints would mean a band of widths - iPad
+   portrait sits right in it - where the block below is already stacked but the
+   heading above it is still reserving 60vh. Measured at 768px that combination
+   put 264px above the heading, worse than the phone case that prompted this. */
+@media(max-width:860px){
+  #cradle.page--flow{min-height:0;padding-top:clamp(76px,11vh,96px);padding-bottom:clamp(26px,3.5vh,38px)}
+}
 /* The statement and the block explaining it are one thought, so the space
    between them is closed up: #cradle keeps its centred viewport height but
    sheds its bottom padding, and #lifecycle starts almost immediately. */
