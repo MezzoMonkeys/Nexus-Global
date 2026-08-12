@@ -50,23 +50,6 @@
   --accent-light:#12b37d;
   --accent-rgb:11,131,92;
   --noise-svg:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  /* Film grain for the dark container surface. Distinct from --noise-svg above,
-     which is a colour-carrying turbulence laid over LIGHT panels as a soft-light
-     texture — that recipe does not survive being moved onto black.
-     fractalNoise has a mean near 0.5 in every channel, so painting it the
-     obvious way (desaturate, draw the rect, dial the opacity) puts a flat 50%
-     grey veil over the ground: the first build of this lifted a #0b0b0b card to
-     roughly #4a4a4a and read as charcoal, not as black-with-grain.
-     So the noise drives ALPHA instead of luminance. The matrix forces RGB to
-     white and sets A = R - 0.55, which clamps everything below the noise's
-     midpoint to fully transparent and leaves the top ~45% as white specks
-     peaking near .45 alpha. The ground stays black and the grain sits on it,
-     which is the way round the reference works.
-     stitchTiles='stitch' is what makes the 240px tile seamless; without it
-     every repeat shows a visible seam, which across a 6-card grid is 30 of them.
-     Drawn 1:1 (background-size matches the SVG's own 240px) so a speck is one
-     CSS pixel — scaling the tile up softens the grain into blotches. */
-  --grain-svg:url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='240'%20height='240'%3E%3Cfilter%20id='g'%3E%3CfeTurbulence%20type='fractalNoise'%20baseFrequency='0.9'%20numOctaves='4'%20stitchTiles='stitch'/%3E%3CfeColorMatrix%20type='matrix'%20values='0%200%200%200%201%200%200%200%200%201%200%200%200%200%201%201%200%200%200%20-0.55'/%3E%3C/filter%3E%3Crect%20width='100%25'%20height='100%25'%20filter='url(%23g)'/%3E%3C/svg%3E");
   --ease:cubic-bezier(.2,.65,.25,1);
   /* Entrance curve. --ease is a gentle in-out and reads as hesitant on a long
      travel: the element idles for the first fifth of the duration, which is
@@ -344,11 +327,15 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
   .line-reveal>span,.reveal.in .line-reveal>span{transform:none;transition:none}
 }
 
-/* Cursor-spotlight glow */
+/* .spotlight is now only the positioning context and the clip for the light on
+   ::before (see the container-surface block further down). The cursor-following
+   ::after glow it is named for is gone: on the black surface the containers now
+   use, a second light that appears under the pointer competes with the pool
+   that shifts on hover, and the brief for that surface is one subtle light per
+   container. main.js still writes --spot-x/--spot-y on every .spotlight element
+   on mousemove; nothing reads them any more, so that listener is now dead and
+   is the thing to remove if the glow is not coming back. */
 .spotlight{position:relative;overflow:hidden}
-.spotlight::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .3s var(--ease);background:radial-gradient(circle at var(--spot-x,50%) var(--spot-y,50%),var(--ink-06),transparent 70%)}
-.spotlight:hover::after{opacity:1}
-.page--dark .spotlight::after{background:radial-gradient(circle at var(--spot-x,50%) var(--spot-y,50%),var(--plat-10),transparent 70%)}
 
 /* Buttons — every one converges on the same accent-red hover/active state
    regardless of variant or light/dark page context, so this is one visual
@@ -858,66 +845,75 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
   .pillar__icon{width:100px}
 }
 
-/* ── The grain surface ──────────────────────────────────────────────────────
+/* ── The container surface ──────────────────────────────────────────────────
    Every boxed container on the site sits on this one treatment: near-black,
-   film grain, white text, accent-green icons. That is .card (about's
-   capabilities grid, network's footprint grid) and .process__step (network's
-   how-it-works blocks) — the same surface component wearing two internal
-   layouts, so they share one rule rather than drifting apart.
+   white text, accent-green icons, and a soft pool of light that shifts on
+   hover (the light itself is the .spotlight::before block below). That is
+   .card (about's capabilities grid, network's footprint grid) and
+   .process__step (network's how-it-works blocks) — the same surface component
+   wearing two internal layouts, so they share one rule rather than drifting
+   apart.
    It replaces a 4%-ink wash that was near-invisible on the off-white flow the
    About page now runs on; a black block on #FDFCF8 states where the container
    starts, which a 4% tint never did.
-   Layer order matters and is not interchangeable:
-     background-color  near-black ground
-     background-image  the grain, on the ELEMENT — crisp, and fixed in place
-     .spotlight::before the moving light blooms — blurred, and above the grain
-   The grain has to live on the element rather than joining the blooms on
-   ::before, because ::before carries filter:blur(12px). Blurring the blooms is
-   the whole point of them; blurring the grain turns it to mush.
+   A flat colour and nothing else. An earlier version carried a film-grain tile
+   here; the surface is meant to read smooth, so the ground is one value and
+   every gradient lives on ::before.
+   The ground does NOT change on hover — only the light moves. Lifting the base
+   as well made the whole card flash rather than the light travelling across it,
+   which is the opposite of a subtle response.
    No border and no shadow: the contrast against the page is doing that work
    already, and an outline on a black block only adds a second edge to the one
    the block already has. */
 .card,.process__step{
   color:var(--platinum);
-  background-color:#0b0b0b;
-  background-image:var(--grain-svg);
-  background-size:240px 240px;
-  background-repeat:repeat;
+  background-color:#0a0a0a;
 }
-/* background-COLOR, not the background shorthand: the shorthand would reset
-   background-image and take the grain with it. */
-.card:hover,.process__step:hover{background-color:#161616}
 
-.card{border:none;border-radius:var(--radius-card);padding:32px 30px 32px;display:flex;flex-direction:column;gap:14px;transition:background-color .3s var(--ease),transform .3s var(--ease)}
+/* The transition here is not for anything on this rule — nothing on .card
+   changes state any more. It is kept because .card and .reveal have equal
+   specificity and .card wins on order, so this declaration is what .reveal's
+   entrance on a card actually runs on. Deleting it would hand cards back to
+   .reveal's own `opacity .5s, transform 1.05s` and quietly restyle how the
+   grids arrive, which is not what was asked for here.
+   Worth flagging rather than fixing in passing: because `opacity` is absent
+   from this list, revealing cards snap to full opacity and only slide, while
+   .process__step — which never had a competing transition — fades and slides
+   properly. The two container types enter differently today. */
+.card{border:none;border-radius:var(--radius-card);padding:32px 30px 32px;display:flex;flex-direction:column;gap:14px;transition:transform .3s var(--ease)}
 
-/* Interactive gradient + noise, adapted from the
-   interactive-gradient-glassmorphism-with-noise reference: flowing
-   greyscale bands plus a grain layer, deliberately kept achromatic — the
-   brand green is placed on deliberate, readable elements (eyebrows, icons,
-   fills, active states), not smeared through an ambient sweep where it
-   would tint every card and dilute the association. The dominant band
-   matches each page's own background (platinum-dominant on light pages,
-   ink-dominant on .page--dark) so the sweep reads as a native sheen on
-   that surface rather than fighting it; the opposite tone appears only
-   as a lower-alpha second band for contrast/definition, not as an equal
-   partner.
-   Scoped to .spotlight generally (not just .card) so it also covers the
-   hero-feature stat/list panels and the
-   process__step blocks — every one of those already carries .spotlight
-   for the pre-existing cursor-glow ::after, so tagging along on that
-   class picks up main.js's mousemove tracking too, for free.
-   Diagonal linear-gradient bands (not radial) sized well beyond the
-   element and slid via background-position, so what's visible is always
-   a soft sweep crossing at an angle rather than a circular hotspot — a
-   tight radial falloff reads as a static "spot"; an oversized band
-   scrolling past reads as flow. Two crossing bands at different angles/
-   phases plus per-element desync (nth-of-type) so neighbours in the same
-   grid never mirror each other, plus a transform nudge toward the live
-   cursor, reusing the --spot-x/--spot-y custom properties main.js already
-   sets on every .spotlight element. Lives on ::before; .spotlight already
-   provides position:relative and the overflow:hidden that clips it to
-   the element's rounded corners. Direct children are pushed to their own
-   stacking layer so text/icons always sit above both this and ::after. */
+/* The light on the container surface.
+   Two soft pools of platinum, held still, sitting on the near-black ground the
+   .card/.process__step rule paints. Most of every container is black; the light
+   is an accent in one corner of it, not a wash across it.
+   This replaced a system of two very wide diagonal BANDS on a permanent
+   13–19s loop. Worth recording why, because the band reasoning was sound for
+   the surface it was written for and is wrong for this one:
+     - Bands were chosen over radials because a tight radial reads as a static
+       "spot" while an oversized band sliding past reads as flow. True when the
+       panel underneath is already bright and the band is a sheen on it. On
+       black the two bands spanned 8%–88% of the layer and overlapped across the
+       whole element, so nothing stayed dark — measured floor 47, peak 86 on a
+       0–255 scale, which is a charcoal card, not a black one.
+     - The loop was ambient. The light now moves only on hover, so it reads as a
+       response rather than as weather.
+   Everything that served the old system went with it: three @keyframes, the
+   nth-of-type desync that stopped neighbouring cards animating in phase, the
+   .page--dark inversion, and the cursor-following ::after glow. .card and
+   .process__step are the only elements on the site carrying .spotlight, so none
+   of it was reachable any more.
+   Sizes are in PERCENTAGES of the layer, not the element, and the layer is
+   inset:-30% — so a 55% pool is ~0.55 × 1.6 = 88% of the container's width, a
+   single soft mass rather than a small dot. background-position places it and
+   is the only thing hover changes.
+   No grain: the ground is a flat colour and the pools are gradients, so the
+   whole surface is smooth. blur(34px) is not there for softness — the radials
+   are already smooth — but to break up the stair-stepping a low-alpha gradient
+   shows when it stretches over several hundred pixels of near-black, which is
+   what the grain used to hide.
+   Lives on ::before; .spotlight provides the position:relative and the
+   overflow:hidden that clips the pools to the rounded corners. Direct children
+   are pushed to their own stacking layer so text and icons sit above it. */
 .spotlight{isolation:isolate}
 .spotlight>*{position:relative;z-index:1}
 .spotlight::before{
@@ -926,82 +922,49 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
   inset:-30%;
   z-index:0;
   pointer-events:none;
-  opacity:.95;
-  filter:blur(12px);
+  filter:blur(34px);
   background-image:
-    linear-gradient(128deg,transparent 8%,rgba(var(--plat-rgb),.85) 38%,rgba(var(--plat-rgb),.62) 58%,transparent 88%),
-    linear-gradient(250deg,transparent 15%,rgba(var(--ink-rgb),.5) 46%,transparent 82%),
-    var(--noise-svg);
-  background-size:240% 240%,260% 260%,180px 180px;
-  background-repeat:no-repeat,no-repeat,repeat;
-  background-blend-mode:normal,normal,soft-light;
-  background-position:0% 0%,100% 100%,0 0;
-  transform:translate(calc((var(--spot-x,50%) - 50%) * .22),calc((var(--spot-y,50%) - 50%) * .22));
-  animation:cardFlow1 13s ease-in-out infinite;
-  transition:opacity .4s var(--ease),transform .5s var(--ease);
-}
-.spotlight:hover::before{opacity:1}
-.spotlight:nth-of-type(2)::before{animation-name:cardFlow2;animation-duration:15s}
-.spotlight:nth-of-type(3)::before{animation-name:cardFlow3;animation-duration:17s}
-.spotlight:nth-of-type(4)::before{animation-name:cardFlow1;animation-duration:19s;animation-delay:-6s}
-.page--dark .spotlight::before{
-  opacity:.95;
-  background-image:
-    linear-gradient(128deg,transparent 8%,rgba(var(--ink-rgb),.85) 38%,rgba(var(--ink-rgb),.62) 58%,transparent 88%),
-    linear-gradient(250deg,transparent 15%,rgba(var(--plat-rgb),.5) 46%,transparent 82%),
-    var(--noise-svg);
-}
-.page--dark .spotlight:hover::before{opacity:1}
-
-/* The grain surface takes its own blooms, and they are shaped differently from
-   the ones above — not just re-tinted.
-   The base .spotlight::before crosses two very wide diagonal BANDS, on the
-   reasoning (documented above) that a tight radial reads as a static spot while
-   an oversized band sliding past reads as flow. That holds on a light panel,
-   where the bands are a sheen over a surface that is already bright. It does
-   not survive the move to black: two bands spanning 8%–88% of the layer overlap
-   across the whole element, so every pixel of the card sits under at least one
-   of them and the "black" card measures a flat charcoal — the first build of
-   this ran a floor of 47 and a peak of 86 on a 0–255 scale, with no black left
-   anywhere on it.
-   Radial pools instead, which is what the reference actually is: soft light
-   falling ON black, with real darkness between. They keep the motion — the
-   layer box is sized larger than the element and the inherited keyframes slide
-   it, so each pool travels rather than sitting still, which is the objection
-   the band approach was written to answer.
-   Two layers, not three: the base rule's third layer is --noise-svg, and the
-   grain now lives on the element where the blur cannot reach it. The
-   background-repeat/position lists inherited from the base rule are still three
-   long; CSS truncates them to the number of images, so the leftover values are
-   unused rather than misaligned. */
-.card.spotlight::before,.process__step.spotlight::before{
-  background-image:
-    radial-gradient(38% 42% at 50% 50%,rgba(var(--plat-rgb),.19),transparent 72%),
-    radial-gradient(34% 38% at 50% 50%,rgba(var(--plat-rgb),.12),transparent 74%);
-  background-size:150% 150%,175% 175%;
-}
-/* Cursor glow, same reason: --ink-06 is black-on-black and invisible here. */
-.card.spotlight::after,.process__step.spotlight::after{
-  background:radial-gradient(circle at var(--spot-x,50%) var(--spot-y,50%),var(--plat-10),transparent 70%);
+    radial-gradient(closest-side,rgba(var(--plat-rgb),.18),transparent),
+    radial-gradient(closest-side,rgba(var(--plat-rgb),.10),transparent);
+  background-size:55% 62%,40% 46%;
+  background-repeat:no-repeat;
+  background-position:14% 6%,88% 92%;
+  transition:transform .55s var(--ease);
 }
 
-@keyframes cardFlow1{
-  0%{background-position:0% 0%,100% 100%,0 0}
-  50%{background-position:100% 55%,0% 45%,0 0}
-  100%{background-position:0% 0%,100% 100%,0 0}
-}
-@keyframes cardFlow2{
-  0%{background-position:100% 0%,0% 100%,0 0}
-  50%{background-position:10% 70%,90% 30%,0 0}
-  100%{background-position:100% 0%,0% 100%,0 0}
-}
-@keyframes cardFlow3{
-  0%{background-position:50% 100%,50% 0%,0 0}
-  50%{background-position:0% 25%,100% 75%,0 0}
-  100%{background-position:50% 100%,50% 0%,0 0}
-}
+/* Hover. A translate rather than a background-position change: it is the same
+   apparent movement, but it composites instead of repainting two blurred
+   gradients every frame, and one rule then covers every placement variant
+   below instead of needing a matching hover pair for each.
+   ~20px on a ~440px card. Enough to notice returning to a card you have already
+   passed over, not enough to look like a separate animation. */
+.spotlight:hover::before{transform:translate(20px,-15px)}
+
+/* Placement variants, so a grid of six does not read as six copies of one
+   asset. nth-of-type cycles in fours; every container in a grid is a div among
+   divs, so this counts the way it looks like it counts.
+   All four positions in the cycle are defined. Leaving 4n+4 to fall through to
+   the base rule looked like an economy but is not one — on a six-card grid it
+   put cards 1, 4 and 5 on the same placement, which is exactly the repetition
+   these variants exist to break.
+   Each keeps the same rule — one larger pool near a corner, one smaller one
+   opposite — and only moves where they sit, which is what stops the set looking
+   patterned while keeping it obviously one family. The hover offsets push each
+   pair further into its own corner rather than all sliding the same way. */
+.spotlight:nth-of-type(4n+2)::before{background-position:86% 10%,10% 88%}
+.spotlight:nth-of-type(4n+3)::before{background-position:20% 94%,92% 14%}
+.spotlight:nth-of-type(4n+4)::before{background-position:92% 88%,12% 10%}
+.spotlight:nth-of-type(4n+2):hover::before{transform:translate(-22px,17px)}
+.spotlight:nth-of-type(4n+3):hover::before{transform:translate(18px,20px)}
+.spotlight:nth-of-type(4n+4):hover::before{transform:translate(-20px,-16px)}
+
 @media (prefers-reduced-motion: reduce){
-  .spotlight::before{animation:none;transform:none;transition:opacity .4s var(--ease)}
+  /* Including the hover shift. It is small and user-initiated, but it is still
+     motion, and the rest of this file honours the preference literally. */
+  .spotlight::before,.spotlight:hover::before,
+  .spotlight:nth-of-type(4n+2):hover::before,
+  .spotlight:nth-of-type(4n+3):hover::before,
+  .spotlight:nth-of-type(4n+4):hover::before{transform:none;transition:none}
 }
 
 .card h3,.card h4{font-size:19px;letter-spacing:-0.01em;line-height:1.25;color:var(--platinum)}
