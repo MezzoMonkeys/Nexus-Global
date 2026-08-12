@@ -50,6 +50,23 @@
   --accent-light:#12b37d;
   --accent-rgb:11,131,92;
   --noise-svg:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  /* Film grain for the dark container surface. Distinct from --noise-svg above,
+     which is a colour-carrying turbulence laid over LIGHT panels as a soft-light
+     texture — that recipe does not survive being moved onto black.
+     fractalNoise has a mean near 0.5 in every channel, so painting it the
+     obvious way (desaturate, draw the rect, dial the opacity) puts a flat 50%
+     grey veil over the ground: the first build of this lifted a #0b0b0b card to
+     roughly #4a4a4a and read as charcoal, not as black-with-grain.
+     So the noise drives ALPHA instead of luminance. The matrix forces RGB to
+     white and sets A = R - 0.55, which clamps everything below the noise's
+     midpoint to fully transparent and leaves the top ~45% as white specks
+     peaking near .45 alpha. The ground stays black and the grain sits on it,
+     which is the way round the reference works.
+     stitchTiles='stitch' is what makes the 240px tile seamless; without it
+     every repeat shows a visible seam, which across a 6-card grid is 30 of them.
+     Drawn 1:1 (background-size matches the SVG's own 240px) so a speck is one
+     CSS pixel — scaling the tile up softens the grain into blotches. */
+  --grain-svg:url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='240'%20height='240'%3E%3Cfilter%20id='g'%3E%3CfeTurbulence%20type='fractalNoise'%20baseFrequency='0.9'%20numOctaves='4'%20stitchTiles='stitch'/%3E%3CfeColorMatrix%20type='matrix'%20values='0%200%200%200%201%200%200%200%200%201%200%200%200%200%201%201%200%200%200%20-0.55'/%3E%3C/filter%3E%3Crect%20width='100%25'%20height='100%25'%20filter='url(%23g)'/%3E%3C/svg%3E");
   --ease:cubic-bezier(.2,.65,.25,1);
   /* Entrance curve. --ease is a gentle in-out and reads as hesitant on a long
      travel: the element idles for the first fifth of the duration, which is
@@ -841,11 +858,37 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
   .pillar__icon{width:100px}
 }
 
-/* Cards, flat filled surfaces with large radius, no borders, no shadow */
-.card{border:none;border-radius:var(--radius-card);padding:32px 30px 32px;display:flex;flex-direction:column;gap:14px;background:var(--ink-04);transition:background .3s var(--ease),transform .3s var(--ease)}
-.card:hover{background:var(--ink-10)}
-.page--dark .card{background:var(--plat-06);border:1px solid var(--plat-10);backdrop-filter:blur(20px) saturate(140%);-webkit-backdrop-filter:blur(20px) saturate(140%);box-shadow:0 1px 0 var(--plat-10) inset,0 12px 36px rgba(0,0,0,.35)}
-.page--dark .card:hover{background:var(--plat-10)}
+/* ── The grain surface ──────────────────────────────────────────────────────
+   Every boxed container on the site sits on this one treatment: near-black,
+   film grain, white text, accent-green icons. That is .card (about's
+   capabilities grid, network's footprint grid) and .process__step (network's
+   how-it-works blocks) — the same surface component wearing two internal
+   layouts, so they share one rule rather than drifting apart.
+   It replaces a 4%-ink wash that was near-invisible on the off-white flow the
+   About page now runs on; a black block on #FDFCF8 states where the container
+   starts, which a 4% tint never did.
+   Layer order matters and is not interchangeable:
+     background-color  near-black ground
+     background-image  the grain, on the ELEMENT — crisp, and fixed in place
+     .spotlight::before the moving light blooms — blurred, and above the grain
+   The grain has to live on the element rather than joining the blooms on
+   ::before, because ::before carries filter:blur(12px). Blurring the blooms is
+   the whole point of them; blurring the grain turns it to mush.
+   No border and no shadow: the contrast against the page is doing that work
+   already, and an outline on a black block only adds a second edge to the one
+   the block already has. */
+.card,.process__step{
+  color:var(--platinum);
+  background-color:#0b0b0b;
+  background-image:var(--grain-svg);
+  background-size:240px 240px;
+  background-repeat:repeat;
+}
+/* background-COLOR, not the background shorthand: the shorthand would reset
+   background-image and take the grain with it. */
+.card:hover,.process__step:hover{background-color:#161616}
+
+.card{border:none;border-radius:var(--radius-card);padding:32px 30px 32px;display:flex;flex-direction:column;gap:14px;transition:background-color .3s var(--ease),transform .3s var(--ease)}
 
 /* Interactive gradient + noise, adapted from the
    interactive-gradient-glassmorphism-with-noise reference: flowing
@@ -909,6 +952,39 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
     var(--noise-svg);
 }
 .page--dark .spotlight:hover::before{opacity:1}
+
+/* The grain surface takes its own blooms, and they are shaped differently from
+   the ones above — not just re-tinted.
+   The base .spotlight::before crosses two very wide diagonal BANDS, on the
+   reasoning (documented above) that a tight radial reads as a static spot while
+   an oversized band sliding past reads as flow. That holds on a light panel,
+   where the bands are a sheen over a surface that is already bright. It does
+   not survive the move to black: two bands spanning 8%–88% of the layer overlap
+   across the whole element, so every pixel of the card sits under at least one
+   of them and the "black" card measures a flat charcoal — the first build of
+   this ran a floor of 47 and a peak of 86 on a 0–255 scale, with no black left
+   anywhere on it.
+   Radial pools instead, which is what the reference actually is: soft light
+   falling ON black, with real darkness between. They keep the motion — the
+   layer box is sized larger than the element and the inherited keyframes slide
+   it, so each pool travels rather than sitting still, which is the objection
+   the band approach was written to answer.
+   Two layers, not three: the base rule's third layer is --noise-svg, and the
+   grain now lives on the element where the blur cannot reach it. The
+   background-repeat/position lists inherited from the base rule are still three
+   long; CSS truncates them to the number of images, so the leftover values are
+   unused rather than misaligned. */
+.card.spotlight::before,.process__step.spotlight::before{
+  background-image:
+    radial-gradient(38% 42% at 50% 50%,rgba(var(--plat-rgb),.19),transparent 72%),
+    radial-gradient(34% 38% at 50% 50%,rgba(var(--plat-rgb),.12),transparent 74%);
+  background-size:150% 150%,175% 175%;
+}
+/* Cursor glow, same reason: --ink-06 is black-on-black and invisible here. */
+.card.spotlight::after,.process__step.spotlight::after{
+  background:radial-gradient(circle at var(--spot-x,50%) var(--spot-y,50%),var(--plat-10),transparent 70%);
+}
+
 @keyframes cardFlow1{
   0%{background-position:0% 0%,100% 100%,0 0}
   50%{background-position:100% 55%,0% 45%,0 0}
@@ -928,9 +1004,11 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
   .spotlight::before{animation:none;transform:none;transition:opacity .4s var(--ease)}
 }
 
-.card h3,.card h4{font-size:19px;letter-spacing:-0.01em;line-height:1.25}
-.card p{font-family:var(--font-body);font-size:14px;line-height:1.6;color:var(--ink-70);margin:0}
-.page--dark .card p{color:var(--plat-70)}
+.card h3,.card h4{font-size:19px;letter-spacing:-0.01em;line-height:1.25;color:var(--platinum)}
+/* Body copy at 85% rather than flat platinum. Both read as white; the 15% is
+   what keeps the heading in front of the paragraph now that they no longer
+   differ in colour, only in size and weight. */
+.card p{font-family:var(--font-body);font-size:14px;line-height:1.6;color:var(--plat-85);margin:0}
 
 .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
 /* ── Cradle to Grave (about.html) ────────────────────────────────────────── */
@@ -1362,8 +1440,12 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
 
 /* Monoline card icons, stroked in the brand green at the step that suits the
    surface behind them. */
-.card__icon{width:30px;height:30px;stroke:currentColor;fill:none;stroke-width:1.4;color:var(--accent-deep);display:block}
-.page--dark .card__icon{color:var(--accent-light)}
+/* --accent-light, not --accent. The ramp at the top of this file exists for
+   exactly this call: --accent (#0b835c) is the fill green, tuned to carry white
+   text on top of it, and at a 1.4 stroke on near-black it goes muddy. The mark
+   is the brand green either way; this is the one of the three that survives
+   being drawn as a hairline on black. */
+.card__icon{width:30px;height:30px;stroke:currentColor;fill:none;stroke-width:1.4;color:var(--accent-light);display:block}
 
 /* Pull quote, an editorial beat that breaks up long narrative. Italic is the hierarchy
    device here, the one place on the page that isn't upright Archivo. */
@@ -1373,13 +1455,17 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
 /* Numbered process steps, 2x2 card grid rather than a vertical stack */
 .process{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 @media(max-width:780px){.process{grid-template-columns:1fr}}
-.process__step{display:grid;grid-template-columns:56px 1fr;gap:20px;padding:28px 26px;border-radius:var(--radius-card);background:var(--ink-04)}
-.page--dark .process__step{background:var(--plat-06)}
-.process__num{font-family:var(--font-display);font-weight:900;font-size:30px;letter-spacing:-0.01em;color:var(--ink-40)}
-.page--dark .process__num{color:var(--plat-40)}
-.process__body h3{font-size:19px;margin-bottom:6px}
-.process__body p{font-family:var(--font-body);font-size:14px;line-height:1.6;color:var(--ink-70);margin:0;max-width:60ch}
-.page--dark .process__body p{color:var(--plat-70)}
+/* Surface (near-black + grain) comes from the shared .card,.process__step rule
+   in the cards block. No background here — declaring one would land later in
+   the cascade and win, taking the grain with it. */
+.process__step{display:grid;grid-template-columns:56px 1fr;gap:20px;padding:28px 26px;border-radius:var(--radius-card)}
+/* The one piece of text held back from white. It is an index, not copy — at
+   30px/900 in full platinum the numeral outweighs the heading it labels.
+   55%, not the 40% used for this on other dark surfaces: 30px/900 is WCAG large
+   text and needs 3:1, and 40% measured 1.95:1 once a bloom passed under it. */
+.process__num{font-family:var(--font-display);font-weight:900;font-size:30px;letter-spacing:-0.01em;color:var(--plat-55)}
+.process__body h3{font-size:19px;margin-bottom:6px;color:var(--platinum)}
+.process__body p{font-family:var(--font-body);font-size:14px;line-height:1.6;color:var(--plat-85);margin:0;max-width:60ch}
 
 /* Responsive nav. No grid-template override needed any more: the three children
    are explicitly placed in columns 1/2/3, so hiding the capsule leaves the menu
