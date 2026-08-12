@@ -15,6 +15,11 @@
 :root{
   --ink:#1c1c1e;
   --platinum:#ededed;
+  /* Warmer and lighter than platinum. Used only by .page--flow, which is the
+     continuous run on the About page; every other surface still resolves to
+     --platinum. Kept as its own token rather than a one-off literal so the run
+     can be retoned in one place. */
+  --offwhite:#FDFCF8;
   --pine:#1c2b27;
   --graphite:#303033;
   --slate:#676768;
@@ -71,6 +76,14 @@
 html{scroll-behavior:smooth;scrollbar-gutter:stable}
 html,body{overflow-x:hidden;overflow-x:clip}
 body{margin:0;font-family:var(--font-body);font-size:16px;color:var(--ink);background:var(--platinum);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;line-height:1.5}
+/* The About page's ground is the off-white, not platinum. #lincor arrives with a
+   wavy clip-path, and a clip is transparent where it cuts - so whatever the body
+   is painted with shows through the notches. Every section used to be sticky and
+   opaque, so the body was never visible anywhere and platinum was free; with the
+   flow run scrolling away it became a grey band sitting between the run and
+   Lincor. Fixing it here rather than by overlapping the previous section means it
+   cannot be out-measured if the wave amplitude is ever retuned. */
+body.page-about{background:var(--offwhite)}
 img,svg{max-width:100%;display:block}
 button{font-family:inherit;cursor:pointer}
 a{color:inherit;text-decoration:none}
@@ -203,6 +216,45 @@ a{color:inherit;text-decoration:none}
 /* Eyebrows carry the brand green. At 11px these are small text, so each context
    takes the ramp step that clears 4.5:1 against what's behind it — never the core
    --accent, which would fail on both surfaces. */
+/* ── The continuous run (about.html, sections 2-6) ───────────────────────────
+   These blocks are NOT .stack. Everywhere else on the site a section pins at the
+   top and holds while the next slides up over it; here five consecutive blocks
+   doing that made one argument read as five separate screens being flicked
+   through. Dropping sticky is the whole mechanism - there is no counter-effect,
+   the sections simply sit in normal flow.
+
+   min-height is the part that is easy to get wrong. .page reserves 100vh, which
+   is right for a pinned panel that owns the screen and wrong for a block in a
+   continuous run: five of them would reserve five viewports for content that
+   does not fill them, which is precisely the empty-scroll problem removed from
+   the Network page. These size to their content and carry their rhythm in
+   padding instead.
+
+   The bottom hairline goes too. It is a divider between panels, and the point
+   here is that there are no panels to divide - one uninterrupted field of
+   --offwhite from the end of the hero to the start of Lincor. */
+/* Top padding has a floor, not just a clamp: the nav is position:fixed at
+   top:16px and roughly 56px tall, so anything under ~100px here puts the first
+   line of a block behind the bar. .page used 120px for exactly this reason and
+   the run has to keep clearing it. */
+.page--flow{min-height:0;background:var(--offwhite);border-bottom:none;padding-top:clamp(112px,11vh,148px);padding-bottom:clamp(88px,10vh,132px)}
+/* The one block in the run that keeps a viewport-scale height. .page__inner
+   already centres, so giving #cradle room lands the statement mid-screen
+   instead of tight under the nav. Still well short of the 100vh that made a
+   run of these feel empty. */
+/* 60vh, not 78. The statement is still centred in its own box, but most of the
+   space under it was centring slack rather than padding - measured at 78vh it
+   left 192px between the sub-line and the image below, against 111px here. The
+   two blocks are one thought and should not read as two screens. */
+#cradle.page--flow{min-height:60vh;justify-content:center;padding-bottom:clamp(16px,2vh,28px)}
+/* The statement and the block explaining it are one thought, so the space
+   between them is closed up: #cradle keeps its centred viewport height but
+   sheds its bottom padding, and #lifecycle starts almost immediately. */
+#lifecycle.page--flow{padding-top:clamp(24px,3vh,44px)}
+/* The cards sat too low: #stages ends with a rule and the two paddings then
+   stacked into a gap far larger than anything else in the run. */
+#capabilities.page--flow{padding-top:clamp(40px,4vh,64px)}
+
 .eyebrow{font-family:var(--font-label);font-size:11px;letter-spacing:.01em;font-style:italic;font-weight:500;color:var(--accent-deep)}
 .page--dark .eyebrow{color:var(--accent-light)}
 .label-pill{display:inline-flex;align-items:center;gap:8px;border:1px solid currentColor;border-radius:999px;padding:9px 18px;font-family:var(--font-label);font-size:11px;font-weight:500;letter-spacing:.01em;font-style:italic}
@@ -537,9 +589,13 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
 #contact-cta.stack{z-index:6}
 
 /* About */
-#story.stack{z-index:2}
-#values.stack{z-index:3}
-#capabilities.stack{z-index:4}
+/* About. #story, #values and #capabilities used to sit at 2, 3 and 4 in this
+   ladder. They are no longer .stack sections (see .page--flow), and #values no
+   longer exists, so those three rules are gone. The gap from 1 to 5 is left as
+   it is ON PURPOSE: these are global id selectors grouped by page in comments
+   only, so closing the gap by renumbering #lincor risks silently adopting
+   another page's stacking order. A gap costs nothing; a collision is invisible
+   until it corrupts a transition. */
 #lincor.stack{z-index:5}
 /* Brand navy, distinct from the site's usual .page--dark pine - this
    section is the one place Lincor (the parent group) is the subject, so it
@@ -877,6 +933,126 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
 .page--dark .card p{color:var(--plat-70)}
 
 .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+/* ── Cradle to Grave (about.html) ────────────────────────────────────────── */
+
+/* The title statement. Centred and given room, because it is the only thing in
+   its block - it exists to name the service and hand off to the material below,
+   so anything else competing for the screen would work against it. */
+/* NO max-width on the wrapper. `ch` resolves against the inherited 16px body
+   size, not the 116px heading inside it, so a value that reads as "about twenty
+   characters" is really ~320px - narrower than the word "Cradle" at display
+   scale. .line-reveal masks with overflow:hidden, so the overflow does not spill,
+   it gets sliced off mid-letter. The two lines are already broken explicitly in
+   the markup, so nothing needs constraining here at all. */
+.c2g-title{text-align:center;margin:0 auto}
+.c2g-title__h{font-size:clamp(40px,8vw,112px);line-height:.98;letter-spacing:-.02em;font-weight:900;margin:0;color:var(--accent)}
+.c2g-title__sub{margin:22px auto 0;max-width:32ch;font-family:var(--font-label);font-size:12px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-55)}
+
+/* Image and paragraph. Two columns on desktop, image first in the DOM so the
+   single-column order on a phone is image-then-text without any reordering. */
+.c2g-split{display:grid;grid-template-columns:minmax(0,0.9fr) minmax(0,1.1fr);gap:clamp(28px,5vw,72px);align-items:center;max-width:var(--container);margin:0 auto;width:100%}
+/* Square corners. The card radius is for CARDS - a UI surface holding text.
+   A photograph is the content itself, and rounding it crops the picture to
+   suit a container it is not in. */
+.c2g-split__media{position:relative;overflow:hidden;background:var(--ink-06)}
+.c2g-split__media picture{display:block}
+.c2g-split__img{width:100%;height:auto;display:block}
+@media(max-width:860px){
+  .c2g-split{grid-template-columns:1fr;gap:32px}
+  /* Portrait source at full column width is a very tall image on a phone, and it
+     would push the paragraph most of a screen down. Capped and cropped from the
+     top, where the bath and mixer actually are. */
+  .c2g-split__media{max-height:52vh}
+  .c2g-split__img{height:52vh;object-fit:cover;object-position:50% 32%}
+}
+
+/* The typed paragraph.
+   THE TEXT IS ALWAYS IN THE DOM. This reveals characters that are already there
+   rather than inserting them, which is not a stylistic choice: a crawler that
+   does not run JavaScript still reads the paragraph whole, a screen reader is
+   never handed a string that mutates under it, and a script that fails leaves
+   readable copy instead of an empty column.
+   The mechanism is one inline span per character with its own opacity, flipped
+   in sequence by js/main.js. Opacity rather than visibility so the glyph keeps
+   its box: the line breaks are computed once, from the full text, and never move
+   as it fills in - which is what stops the paragraph reflowing line by line
+   while you read it. */
+.c2g-type{font-size:clamp(16px,1.35vw,19px);line-height:1.62;color:var(--ink-85);max-width:56ch;margin:0}
+/* THE DEFAULT IS VISIBLE. Characters are only hidden once main.js has wrapped
+   them AND committed to animating, by adding .is-armed. Written the other way
+   round - hidden by default, revealed by script - any failure between load and
+   the observer firing would leave a blank column where the paragraph should be,
+   which is the one outcome worth engineering against here. */
+.c2g-type.is-armed .c2g-type__c{opacity:0}
+.c2g-type.is-armed .c2g-type__c[data-on]{opacity:1}
+/* The caret rides the CURRENT character, not the end of the paragraph.
+   As ::after on .c2g-type it sat after the element's whole content box - which
+   is the end of the full, already-present text - so it appeared parked at the
+   finish line from the first frame, several lines below the words actually
+   being typed. Hanging it off the character that was just revealed puts it
+   where the typing is. js/main.js moves the data-caret attribute along. */
+/* The character carrying the caret becomes the positioning context for it, and
+   the caret is taken out of flow. Both halves matter: absolute without a
+   positioned parent would resolve against the section box and throw the caret
+   across the page, and an in-flow caret 2px wide would shove every following
+   character sideways as it advanced, so the text would jitter the whole way
+   through the animation. Out of flow, it costs the line nothing. */
+.c2g-type .c2g-type__c[data-caret]{position:relative}
+.c2g-type .c2g-type__c[data-caret]::after{content:"";position:absolute;left:100%;top:.06em;margin-left:2px;width:2px;height:1em;background:var(--accent);animation:c2gCaret .9s steps(1,end) infinite}
+@keyframes c2gCaret{0%,49%{opacity:1}50%,100%{opacity:0}}
+/* Both fallbacks land on the same end state: the whole paragraph, immediately.
+   Anyone who has asked for less motion, and anyone whose script never ran, gets
+   the copy rather than a blank space where it should be. */
+@media(prefers-reduced-motion:reduce){
+  .c2g-type.is-armed .c2g-type__c{opacity:1}
+  .c2g-type .c2g-type__c[data-caret]::after{display:none;animation:none}
+}
+
+/* The highlight. Sweeps a green marker across the phrase left to right, holds,
+   then wipes off to the right leaving the words themselves green - so the colour
+   change reads as the consequence of the highlight rather than an unrelated
+   recolour.
+   Painted as a background-size animation rather than a positioned pseudo-element
+   on purpose: a background is drawn behind its own text automatically, with no
+   z-index and no stacking context to negotiate. .page is position:relative with
+   z-index:1, so a pseudo-element pushed to z-index:-1 would be arguing with that
+   for no benefit.
+   Two animations run in lockstep on one timeline - the marker and the text
+   colour - because the text has to go light while it sits on the green and land
+   on green once the marker has gone. */
+.c2g-hl{background-image:linear-gradient(var(--accent),var(--accent));background-repeat:no-repeat;background-size:0% 100%;background-position:left center;padding:0 .12em;margin:0 -.12em;border-radius:2px}
+.c2g-hl.is-lit{animation:c2gMarker 2.1s var(--ease) forwards,c2gMarkerText 2.1s var(--ease) forwards}
+@keyframes c2gMarker{
+  0%{background-size:0% 100%;background-position:left center}
+  26%{background-size:100% 100%;background-position:left center}
+  60%{background-size:100% 100%;background-position:left center}
+  61%{background-size:100% 100%;background-position:right center}
+  100%{background-size:0% 100%;background-position:right center}
+}
+@keyframes c2gMarkerText{
+  0%,16%{color:var(--ink-85)}
+  30%,60%{color:var(--platinum)}
+  82%,100%{color:var(--accent)}
+}
+/* Reduced motion still gets the outcome, just not the sweep. */
+@media(prefers-reduced-motion:reduce){
+  .c2g-hl.is-lit{animation:none;color:var(--accent);background-size:0% 100%}
+}
+
+/* The five stages. An <ol>, because the sequence IS the content - the numerals
+   are rendered from the markup's own order rather than typed into it, so the
+   order cannot drift out of step with the numbers shown. */
+.stages{list-style:none;max-width:var(--container);margin:0 auto;width:100%;padding:0;counter-reset:stage}
+.stage{counter-increment:stage;display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:clamp(18px,3vw,44px);row-gap:6px;align-items:baseline;padding:clamp(22px,3vw,34px) 0;border-top:1px solid var(--ink-10)}
+.stage:last-child{border-bottom:1px solid var(--ink-10)}
+.stage::before{content:counter(stage,decimal-leading-zero);font-family:var(--font-label);font-size:12px;font-weight:500;letter-spacing:.10em;color:var(--accent);font-variant-numeric:tabular-nums}
+.stage__h{font-size:clamp(22px,3.2vw,38px);line-height:1.1;letter-spacing:-.01em;font-weight:500;margin:0;text-transform:uppercase}
+.stage__p{grid-column:2;margin:8px 0 0;font-size:15px;line-height:1.6;color:var(--ink-70);max-width:62ch}
+@media(max-width:640px){
+  .stage{grid-template-columns:1fr}
+  .stage__p{grid-column:1}
+}
+
 .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
 .grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
 @media(max-width:980px){.grid-3{grid-template-columns:1fr 1fr}.grid-4{grid-template-columns:1fr 1fr}}

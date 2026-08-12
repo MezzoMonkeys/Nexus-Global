@@ -8,3 +8,9 @@ Thumbs.db
 # encoded derivatives beside them are what the site actually serves. Keep the
 # masters locally or in shared storage so a re-encode is always possible.
 VIDEOS/hf_*
+
+# Image masters, same reasoning. The Attivo bath render is 3000x3500 and 2.86MB;
+# what the site serves is the AVIF/WebP set beside it, topping out at 1440px and
+# 100KB. Keep the master locally or in shared storage so a re-encode at a
+# different size is always possible.
+IMAGERY/attivo_freestand_bath_mixer__black_camera_png.jpg

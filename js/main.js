@@ -654,6 +654,107 @@
     else window.addEventListener('load', armCurtainMomentum, { once: true });
   }
 
+  // Cradle to Grave: the paragraph types itself in.
+  //
+  // The text is already in the markup and is never inserted or removed. This
+  // wraps the characters that are there and reveals them in order, which is what
+  // keeps the effect from costing anything real: a crawler that does not run
+  // scripts reads the paragraph whole, a screen reader is handed a static string
+  // rather than one mutating under it, and the line breaks are computed once
+  // from the full text so the block never reflows while it fills in.
+  //
+  // Spaces are deliberately NOT wrapped. Leaving them as bare text nodes keeps
+  // every line-break opportunity exactly where the browser would put it anyway,
+  // and an invisible space is invisible either way, so wrapping them would be
+  // work with a layout risk and no payoff.
+  var typeEl = document.getElementById('c2gType');
+  if (typeEl && typeEl.textContent.trim()) {
+    // Walks the tree rather than flattening textContent. The paragraph contains a
+    // .c2g-hl span around the phrase that gets highlighted at the end, and reading
+    // textContent then rewriting it would throw that span away - the characters
+    // would survive and the structure would not. Descending instead wraps the
+    // characters inside each text node and leaves every element where it was.
+    var chars = [];
+    var wrapChars = function(node){
+      var kids = [].slice.call(node.childNodes);
+      for (var k = 0; k < kids.length; k++) {
+        var n = kids[k];
+        if (n.nodeType === 3) {
+          var t = n.nodeValue, frag = document.createDocumentFragment();
+          for (var ci = 0; ci < t.length; ci++) {
+            var ch = t.charAt(ci);
+            if (ch === ' ' || ch === '\n' || ch === '\t') {
+              frag.appendChild(document.createTextNode(ch));
+            } else {
+              var sp = document.createElement('span');
+              sp.className = 'c2g-type__c';
+              sp.textContent = ch;
+              frag.appendChild(sp);
+              chars.push(sp);
+            }
+          }
+          node.replaceChild(frag, n);
+        } else if (n.nodeType === 1) {
+          wrapChars(n);
+        }
+      }
+    };
+    wrapChars(typeEl);
+    var highlight = typeEl.querySelector('.c2g-hl');
+
+    // ~165 characters a second puts this paragraph at about 2.6s. Slower reads
+    // as a gimmick holding the reader on an unfinished sentence; faster stops
+    // registering as typing at all.
+    var CPS = 165;
+    var runType = function(){
+      typeEl.classList.add('is-armed', 'is-typing');
+      var t0 = 0, shown = 0, caret = null;
+      var step = function(ts){
+        if (!t0) t0 = ts;
+        var target = Math.min(chars.length, Math.floor((ts - t0) / 1000 * CPS));
+        // One pass per frame over only the newly-due characters, rather than a
+        // timer per character: the whole run is O(n) writes and one rAF chain.
+        while (shown < target) { chars[shown++].setAttribute('data-on', ''); }
+        // The caret hangs off the last revealed character so it sits where the
+        // typing is. Exactly one element carries it at a time - moved, not
+        // re-created - so this stays two attribute writes a frame.
+        var head = chars[shown - 1];
+        if (head && head !== caret) {
+          if (caret) { caret.removeAttribute('data-caret'); }
+          head.setAttribute('data-caret', '');
+          caret = head;
+        }
+        if (shown < chars.length) { requestAnimationFrame(step); return; }
+        if (caret) { caret.removeAttribute('data-caret'); }
+        typeEl.classList.remove('is-typing');
+        // The marker runs only once the sentence it marks is fully readable.
+        // Sweeping it while characters were still arriving would highlight a
+        // phrase the reader has not been given yet.
+        if (highlight) {
+          setTimeout(function(){ highlight.classList.add('is-lit'); }, 420);
+        }
+      };
+      requestAnimationFrame(step);
+    };
+
+    // Anyone who has asked for less motion, and any browser without an observer
+    // to trigger on, keeps the paragraph exactly as it was: whole, immediately.
+    // .is-armed is never added in that case, so nothing is ever hidden.
+    if (!reduceMotion && 'IntersectionObserver' in window) {
+      var typeIo = new IntersectionObserver(function(entries){
+        if (!entries[0].isIntersecting) return;
+        typeIo.disconnect();
+        runType();
+      }, { threshold: 0.35 });
+      typeIo.observe(typeEl);
+    } else if (highlight) {
+      // No typing here, but the phrase should still end up green - the colour is
+      // part of how the sentence reads, not part of the animation. The CSS
+      // reduced-motion rule drops the sweep and leaves the end state.
+      highlight.classList.add('is-lit');
+    }
+  }
+
   // General enquiry form. Posts to /api/enquiry.
   //
   // This used to hand the browser a mailto: link, which looks like it worked and
