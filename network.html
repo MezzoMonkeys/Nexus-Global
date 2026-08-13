@@ -171,35 +171,51 @@
 <div class="curtain__dwell" aria-hidden="true"></div>
 
 <section class="page page--dark stack" id="where-we-work">
+  <!-- Outside .page__inner on purpose. The photograph is full-bleed to the top,
+       right and bottom of the section, so it is positioned against the SECTION
+       rather than against the centred container - the same arrangement
+       .image-panel uses on the homepage. Below 900px it drops back into normal
+       flow and becomes the first block in the section, which is the stacked
+       order we want anyway. -->
+  <figure class="ww__figure reveal reveal-d2">
+    <picture>
+      <source type="image/avif" srcset="/IMAGERY/logistics-420.avif 420w, /IMAGERY/logistics-632.avif 632w" sizes="(max-width:900px) 100vw, 47vw">
+      <source type="image/webp" srcset="/IMAGERY/logistics-420.webp 420w, /IMAGERY/logistics-632.webp 632w" sizes="(max-width:900px) 100vw, 47vw">
+      <img class="ww__img" src="/IMAGERY/logistics.jpg" alt="A freight trailer on an open highway running between mountains" width="632" height="1000" loading="lazy" decoding="async">
+    </picture>
+  </figure>
   <div class="page__inner">
-    <div class="section-head section-head--lead">
-      <h2 class="section-head__h reveal">Where We Work</h2>
-    </div>
-    <!-- No cards here. These four sit directly on the section: a large drawn
-         mark, a heading and a line or two, in a row. The card surface is the
-         site's default container and it appears on nearly every other section,
-         so dropping it is what makes this one read as its own thing rather than
-         another grid of boxes. -->
-    <div class="pillars">
-      <div class="pillar reveal">
-        <svg class="pillar__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20V9l6 4V9l6 4V6l6 3v11z"/></svg>
-        <h3 class="pillar__h">OEM manufacturers</h3>
-        <p class="pillar__p">Years of orders with the same factories, not a single introduction. We know their real capability and their ceilings.</p>
-      </div>
-      <div class="pillar reveal reveal-d2">
-        <svg class="pillar__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h16l-1-4H5zM5 9v11h14V9M9 20v-6h6v6"/></svg>
-        <h3 class="pillar__h">Major keychain retailers</h3>
-        <p class="pillar__p">Large-format retail groups across South Africa and the continent. We know their calendars, margins and range planning.</p>
-      </div>
-      <div class="pillar reveal reveal-d3">
-        <svg class="pillar__icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="19" r="1.5"/><circle cx="17" cy="19" r="1.5"/><path d="M3 4h2l2 11h11l2-8H6"/></svg>
-        <h3 class="pillar__h">Open market channels</h3>
-        <p class="pillar__p">Wholesale and open-market routes to volume across the continent, complementing our retail work rather than competing with it.</p>
-      </div>
-      <div class="pillar reveal reveal-d4">
-        <svg class="pillar__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6 7-11a7 7 0 0 0-14 0c0 5 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
-        <h3 class="pillar__h">African retail groups</h3>
-        <p class="pillar__p">Grocery, general merchandise and health &amp; beauty, from Gauteng and the Western Cape to markets further north.</p>
+    <!-- Copy on the left, one photograph running the full height on the right.
+         The four points are the same numbered-row list the About page uses for
+         the Cradle to Grave stages (.stages/.stage), reused rather than
+         re-styled: the two are the same component - an ordered sequence of
+         named steps - and the only difference here is the dark surface, which
+         .page--dark already handles in the CSS. -->
+    <div class="ww">
+      <div class="ww__col">
+        <div class="section-head section-head--lead">
+          <h2 class="section-head__h reveal">Where We Work</h2>
+        </div>
+        <!-- An <ol>, so the numerals come from the markup's own order and cannot
+             drift out of step with what is written. -->
+        <ol class="stages ww__list">
+          <li class="stage reveal">
+            <h3 class="stage__h">OEM manufacturers</h3>
+            <p class="stage__p">Years of orders with the same factories, not a single introduction. We know their real capability and their ceilings.</p>
+          </li>
+          <li class="stage reveal reveal-d2">
+            <h3 class="stage__h">Major keychain retailers</h3>
+            <p class="stage__p">Large-format retail groups across South Africa and the continent. We know their calendars, margins and range planning.</p>
+          </li>
+          <li class="stage reveal reveal-d3">
+            <h3 class="stage__h">Open market channels</h3>
+            <p class="stage__p">Wholesale and open-market routes to volume across the continent, complementing our retail work rather than competing with it.</p>
+          </li>
+          <li class="stage reveal reveal-d4">
+            <h3 class="stage__h">African retail groups</h3>
+            <p class="stage__p">Grocery, general merchandise and health &amp; beauty, from Gauteng and the Western Cape to markets further north.</p>
+          </li>
+        </ol>
       </div>
     </div>
   </div>

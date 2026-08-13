@@ -806,60 +806,120 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
    honest declaration rather than a grid holding an empty cell. */
 .section-head--lead{display:block}
 
-/* ── Pillars ────────────────────────────────────────────────────────────────
-   Four points set straight onto the section — a large drawn mark, a heading,
-   a line or two — with no card behind them. The card surface is this site's
-   default container and it carries nearly every other section, so the absence
-   here is the point: it lets the marks be the thing you see, and gives the page
-   somewhere to breathe between two grids of boxes.
+/* ── Where We Work ──────────────────────────────────────────────────────────
+   Copy in a column on the left, one photograph running the full height of the
+   section on the right. The four points are the .stages/.stage list from the
+   About page rather than a component of their own — see the note on .stages.
 
-   The row is what makes the marks large. In a two-up grid each cell is most of
-   a column wide and an icon can only ever be an ornament at the top of it; four
-   narrow columns put the mark and the width of the text at nearly the same
-   measure, which is what reads as the icon carrying the section. */
-/* Centred in the section rather than sitting at the top, because without the
-   card grid this is a short block and a screen of dead space under it reads as
-   an unfinished section.
-   `safe` is doing real work: stacked on a phone these four run taller than the
-   viewport, and ordinary centring overflows a flex container equally at BOTH
-   ends — which lifted the eyebrow up behind the fixed nav, unreachable. `safe`
-   drops back to start alignment the moment the content stops fitting, so the
-   centring only applies where there is room for it. */
-#where-we-work .page__inner{justify-content:safe center}
+   The two columns are EQUAL, and that is a load-bearing choice rather than a
+   proportion someone liked. The photograph is positioned against the section
+   (it has to be, to bleed past the centred container), so its left edge has to
+   be stated in the section's own coordinates while the text column is stated in
+   the container's. Those two only reduce to the same simple number at 50/50:
+   the container is centred, so its midpoint IS the section's midpoint, and both
+   edges fall out as `50% ± gap/2` with no reference to --container or --pad at
+   all. At any other split the figure needs a calc() that restates the whole
+   page-layout sum and silently goes wrong the moment one term is touched.
 
-.pillars{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(24px,3.4vw,52px);margin-top:8px}
-.pillar{display:flex;flex-direction:column;align-items:flex-start;gap:18px}
+   `flex:1 0 auto` grows the block to fill the section but never shrinks it, so
+   content taller than the box extends DOWNWARD only — nothing is ever pushed up
+   behind the fixed nav where it cannot be scrolled back to. That is the
+   guarantee the `safe centre` rule that used to live here provided. */
+#where-we-work{--ww-gap:clamp(32px,4.5vw,72px)}
+.ww{flex:1 0 auto;display:grid;grid-template-columns:1fr 1fr;gap:var(--ww-gap);align-items:stretch}
+/* Column 2 of that grid is deliberately empty: it is the space the photograph
+   occupies, and leaving it as a real grid track is what reserves it. */
+.ww__col{display:flex;flex-direction:column;justify-content:center;min-width:0}
+.ww__list{margin:0}
 
-/* Stroke width is in the viewBox's own units, so it scales with the box: one
-   number holds for every size the mark is drawn at, and there is no separate
-   weight to maintain per breakpoint.
-   0.42, against the 1.4 used at 30px on .card__icon, is an optical correction
-   and a large one. Line weight has to come DOWN as a mark scales up, not stay
-   proportional — keeping the small-icon ratio here produced a ~9px line, which
-   reads as a chunky app glyph rather than a drawing.
-   Note that the two numbers on this rule are not independent: because the stroke
-   is in viewBox units it scales with the box, so trimming the size thins the
-   line as well. At 156px the line lands near 2.7px, and on a phone nearer 1.8 —
-   fine, but every screen that matters here renders it at 2x or better, where
-   that is a crisp hairline rather than a broken one. */
-.pillar__icon{width:clamp(88px,10.5vw,156px);height:auto;aspect-ratio:1;stroke:currentColor;fill:none;stroke-width:.42;stroke-linecap:round;stroke-linejoin:round;color:var(--platinum);display:block}
-.pillar__h{font-size:clamp(17px,1.35vw,20px);letter-spacing:-0.01em;line-height:1.25;color:var(--platinum)}
-.pillar__p{font-family:var(--font-body);font-size:14px;line-height:1.6;color:var(--plat-70);margin:0;max-width:34ch}
+/* The list is in a column roughly half the container wide, so the stage heading
+   is re-clamped down from the full-width size it takes on About. Left at
+   clamp(...,38px) the longer two of these ran to three lines each and the
+   numerals stopped lining up with anything. */
+.ww .stage__h{font-size:clamp(18px,2.15vw,27px)}
+.ww .stage{padding:clamp(14px,1.75vw,20px) 0}
+.ww .stage__p{font-size:14.5px;max-width:46ch}
+/* Tighter than the 36/32 the heading carries elsewhere. The whole section has
+   to fit a 900px-tall laptop screen: at the default margins it ran to 994px,
+   and a .stack panel that overshoots by a hundred pixels cuts the photograph
+   at the fold on exactly the screen size most people are reading it on. */
+.ww .section-head{margin:0 0 clamp(18px,2.4vw,28px)}
 
-/* Two-up, then stacked. The mark is re-sized at each step rather than left on
-   one viewport-relative clamp, because the thing it has to hold its own against
-   is the COLUMN, not the window: dropping from four columns to two doubles the
-   measure at the same viewport width, and a single clamp that looks right across
-   four narrow columns leaves the mark a quarter of the width of two wide ones,
-   at which point it is back to being an ornament above a paragraph. */
-@media(max-width:980px){
-  .pillars{grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(28px,5vw,52px)}
-  .pillar__icon{width:clamp(104px,14.5vw,148px)}
+/* Full-bleed to the top, right and bottom of the section: no card radius, no
+   gutter, running off the edge of the screen.
+
+   Absolutely positioned against .page, exactly as .image-panel is, and a
+   SIBLING of .page__inner in the markup rather than a child of it. Three of the
+   four edges then need no arithmetic at all — top/right/bottom:0 resolve
+   against the section's padding box, which is the full width of the screen.
+   Only `left` is computed, and because the grid above is 50/50 it is just the
+   midpoint plus half a gutter.
+
+   Sizing the box to the visible region is the point of doing it this way. The
+   first attempt kept the figure in the grid and bled it on a -50vw margin with
+   the section clipping the overrun — the edge landed correctly, but the box was
+   then 1237px wide with only 610px of it on screen, so object-fit:cover framed
+   the photograph for a wide landscape crop and the viewer saw the left half of
+   it. The wheels and the road, which is most of what the picture is of, were
+   cropped away off-screen. The box has to BE the visible box. */
+.ww__figure{position:absolute;top:0;right:0;bottom:0;left:calc(50% + var(--ww-gap) / 2);z-index:0;margin:0;overflow:hidden;background:var(--plat-06)}
+.ww__figure picture{position:absolute;inset:0;display:block}
+/* Nav legibility, not decoration — the same job .content-split__image--bleed's
+   scrim does, and load-bearing for the same reason. The photograph now runs
+   under the fixed nav and the top of the frame is near-white sky, while the nav
+   over a .page--dark section is platinum. Measured against the identical link
+   pinned on #footprint (pine, nothing behind it), "Contact" fell from 4.32 to
+   2.10 the moment the picture bled up under it. Roughly halved.
+
+   Corner-weighted rather than a flat top band, and that is what keeps it off
+   the photograph. The nav pill overlaps only the first ~145px of the picture,
+   so a band has to darken the ENTIRE width to fix a problem confined to one
+   corner: reaching the baseline that way needed .82 across the top and looked
+   like a veil. A pool anchored just outside the top-left corner reaches 5.02
+   with a .34 band under it — and it sits exactly where the picture already
+   meets the dark green section, so it reads as falloff into the page rather
+   than as something laid over the image. */
+.ww__figure::after{
+  content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:
+    radial-gradient(105% 135% at 0% -6%,rgba(0,0,0,.88) 0,rgba(0,0,0,.46) 28%,rgba(0,0,0,0) 58%),
+    linear-gradient(180deg,rgba(0,0,0,.34) 0,rgba(0,0,0,0) 180px);
 }
-@media(max-width:560px){
-  .pillars{grid-template-columns:1fr;gap:38px}
-  .pillar{gap:14px}
-  .pillar__icon{width:100px}
+/* 62%, not centre. The photograph is a tall portrait and the truck sits in its
+   lower half, so any box wider than the source's 0.63 ratio crops from the
+   middle and takes the wheels and the road with it — which is most of what the
+   picture is of. Biasing the crop low keeps the subject whole. In the
+   two-column layout the box is nearly the source's own ratio and this moves the
+   frame by about 25px, so it costs nothing where it isn't needed. */
+.ww__img{width:100%;height:100%;object-fit:cover;object-position:center 62%;display:block}
+
+/* One column below 900. The photograph goes first: stacked, a picture under
+   four rows of text is a footnote, and the point of this section is that it is
+   image-led.
+   Square, not a letterbox strip. A 752x420 band out of a 632x1000 original
+   showed the side of a trailer and nothing else — no wheels, no road, no
+   horizon. A square box keeps roughly 60% of the frame's height, which is the
+   whole vehicle. */
+@media(max-width:900px){
+  .ww{grid-template-columns:1fr;gap:clamp(28px,5vw,40px)}
+  /* Back into normal flow, where being a sibling of .page__inner pays off a
+     second time: .page is a column flex container and the figure is its first
+     child, so dropping position:absolute puts the picture above the copy with
+     no reordering.
+     The bleed is now top and BOTH sides. -120px is .page's own padding-top,
+     negated — read the two together, because if that padding changes this stops
+     being flush. The sides are exactly --pad, with no clipping needed. */
+  /* relative, not static: the <picture> inside is inset:0 absolute, so the
+     figure has to stay its containing block. Left static it would resolve
+     against .page instead and the photograph would cover the whole section.
+     `inset:auto` is not tidying-up. top/right/bottom/left carry over from the
+     rule above, and on a RELATIVE box those stop being edges and become
+     offsets: the figure kept its correct size and then slid half a screen to
+     the right. Clearing them is what actually puts it back. */
+  /* The bottom margin has to be stated. Out of the grid, the figure no longer
+     gets the .ww gap, and the heading sat hard against the photograph. */
+  .ww__figure{position:relative;inset:auto;width:auto;aspect-ratio:1;margin:-120px calc(-1 * var(--pad)) clamp(28px,6vw,44px)}
+  .ww .stage__h{font-size:clamp(20px,4.4vw,30px)}
 }
 
 /* ── The container surface ──────────────────────────────────────────────────
@@ -1096,9 +1156,16 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
   .c2g-hl.is-lit{animation:none;color:var(--accent);background-size:0% 100%}
 }
 
-/* The five stages. An <ol>, because the sequence IS the content - the numerals
-   are rendered from the markup's own order rather than typed into it, so the
-   order cannot drift out of step with the numbers shown. */
+/* The numbered stage list. An <ol>, because the sequence IS the content - the
+   numerals are rendered from the markup's own order rather than typed into it,
+   so the order cannot drift out of step with the numbers shown.
+
+   Used twice: the five Cradle to Grave stages on About (light surface, full
+   container width) and the four channels in Network's Where We Work (dark,
+   half width). One component, because they are the same thing - an ordered run
+   of named steps under a rule - and the differences between the two are surface
+   and measure, which the .page--dark block below and the .ww block earlier
+   handle without touching any of this. */
 .stages{list-style:none;max-width:var(--container);margin:0 auto;width:100%;padding:0;counter-reset:stage}
 .stage{counter-increment:stage;display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:clamp(18px,3vw,44px);row-gap:6px;align-items:baseline;padding:clamp(22px,3vw,34px) 0;border-top:1px solid var(--ink-10)}
 .stage:last-child{border-bottom:1px solid var(--ink-10)}
@@ -1109,6 +1176,14 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
   .stage{grid-template-columns:1fr}
   .stage__p{grid-column:1}
 }
+
+/* The same list on pine. The numeral takes --accent-light and not --accent:
+   the core green measures 3.10:1 against pine and this is 12px type, so it is
+   the ramp step or nothing. Same rule the rest of the site follows. */
+.page--dark .stage{border-top-color:var(--plat-10)}
+.page--dark .stage:last-child{border-bottom-color:var(--plat-10)}
+.page--dark .stage::before{color:var(--accent-light)}
+.page--dark .stage__p{color:var(--plat-70)}
 
 .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
 .grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
