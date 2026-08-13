@@ -57,6 +57,34 @@ const CANARIES = {
   'js/particle-globe.js': ['gl_Position', 'function animate'],
 };
 
+/**
+ * Refuse to run in a working copy.
+ *
+ * The header above says "nothing in git is ever modified by a deploy", and that
+ * is true of a deploy - but this script edits files IN PLACE, so running it by
+ * hand in a checkout does exactly what it does on Vercel: it deletes every
+ * comment from four source files, permanently, in the tree you are working in.
+ * That has now happened once, mid-edit, and only `git checkout --` on files
+ * that happened to be committed got them back. Uncommitted work would have gone
+ * with them.
+ *
+ * A CI environment variable is the discriminator because Vercel sets both VERCEL
+ * and CI, and neither is set in a terminal. `--force` is there for anyone who
+ * genuinely wants the in-place strip locally, and prints what it is about to do.
+ */
+const FORCED = process.argv.includes('--force');
+if (!process.env.VERCEL && !process.env.CI && !FORCED) {
+  console.error(
+    'build.js rewrites css/ and js/ IN PLACE, stripping every comment.\n' +
+    'That is correct on Vercel (throwaway clone) and destructive here.\n\n' +
+    'To check the output without touching your files, deploy a preview.\n' +
+    'To strip this working copy anyway: node build.js --force\n' +
+    '(commit first - the comments are not recoverable otherwise.)'
+  );
+  process.exit(1);
+}
+if (FORCED) console.log('--force: stripping comments from the working copy in place.\n');
+
 const nlOnly = s => s.replace(/[^\n]/g, '');
 
 /**
