@@ -54,4 +54,4 @@ Allow: /
 User-agent: meta-externalagent
 Allow: /
 
-Sitemap: https://www.nexusglobal.com/sitemap.xml
+Sitemap: https://nexusconnecthk.com/sitemap.xml

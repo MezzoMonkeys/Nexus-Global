@@ -9,19 +9,19 @@
      404.html is deliberately absent: it is noindex and must never be submitted. -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://www.nexusglobal.com/</loc>
+    <loc>https://nexusconnecthk.com/</loc>
     <lastmod>2026-08-11</lastmod>
   </url>
   <url>
-    <loc>https://www.nexusglobal.com/about</loc>
+    <loc>https://nexusconnecthk.com/about</loc>
     <lastmod>2026-08-12</lastmod>
   </url>
   <url>
-    <loc>https://www.nexusglobal.com/network</loc>
+    <loc>https://nexusconnecthk.com/network</loc>
     <lastmod>2026-08-11</lastmod>
   </url>
   <url>
-    <loc>https://www.nexusglobal.com/contact</loc>
+    <loc>https://nexusconnecthk.com/contact</loc>
     <lastmod>2026-08-11</lastmod>
   </url>
 </urlset>

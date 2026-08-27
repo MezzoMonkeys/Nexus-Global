@@ -59,8 +59,8 @@ module.exports = async (req, res) => {
     return res.status(400).json({ ok: false, error: 'That email address does not look right.', fields: ['email'] });
   }
 
-  const TO = process.env.ENQUIRY_TO || 'enquiries@nexusglobal.com';
-  const FROM = process.env.ENQUIRY_FROM || 'website@nexusglobal.com';
+  const TO = process.env.ENQUIRY_TO || 'enquiries@nexusconnecthk.com';
+  const FROM = process.env.ENQUIRY_FROM || 'website@nexusconnecthk.com';
   const subject = `Website enquiry, ${oneLine(data.subject) || 'General'}, ${oneLine(data.company)}`;
   const rows = FIELDS.filter(f => data[f]).map(f =>
     `<tr><td style="padding:4px 12px 4px 0;vertical-align:top"><strong>${f}</strong></td>` +

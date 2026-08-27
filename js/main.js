@@ -830,7 +830,7 @@
     var mailtoFallback = function(d){
       var body = 'Name: ' + d.name + '\nCompany: ' + d.company + '\nEmail: ' + d.email
         + (d.phone ? '\nPhone: ' + d.phone : '') + (d.role ? '\nI am a: ' + d.role : '') + '\n\n' + d.message;
-      return 'mailto:enquiries@nexusglobal.com'
+      return 'mailto:enquiries@nexusconnecthk.com'
         + '?subject=' + encodeURIComponent('Enquiry: ' + (d.subject || 'General Partnership'))
         + '&body=' + encodeURIComponent(body);
     };
@@ -865,7 +865,7 @@
           enquiryStatus.textContent = 'We couldn’t send that automatically. Please email us directly at ';
           var a = document.createElement('a');
           a.href = mailtoFallback(d);
-          a.textContent = 'enquiries@nexusglobal.com';
+          a.textContent = 'enquiries@nexusconnecthk.com';
           enquiryStatus.appendChild(a);
           enquiryStatus.appendChild(document.createTextNode(' — your message is attached to that link.'));
         }
