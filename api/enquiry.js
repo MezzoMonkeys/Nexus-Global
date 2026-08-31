@@ -59,7 +59,11 @@ module.exports = async (req, res) => {
     return res.status(400).json({ ok: false, error: 'That email address does not look right.', fields: ['email'] });
   }
 
-  const TO = process.env.ENQUIRY_TO || 'enquiries@nexusconnecthk.com';
+  // ENQUIRY_TO may list several recipients, comma-separated. Resend wants them as
+  // an array and Postmark as a comma-joined string, so parse once and format per
+  // provider rather than making the env var's shape a provider detail.
+  const TO = (process.env.ENQUIRY_TO || 'Keith@lincorholdings.com,tim@lincorholdings.com')
+    .split(',').map(s => s.trim()).filter(Boolean);
   const FROM = process.env.ENQUIRY_FROM || 'website@nexusconnecthk.com';
   const subject = `Website enquiry, ${oneLine(data.subject) || 'General'}, ${oneLine(data.company)}`;
   const rows = FIELDS.filter(f => data[f]).map(f =>
@@ -73,14 +77,14 @@ module.exports = async (req, res) => {
       const r = await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ from: FROM, to: [TO], reply_to: data.email, subject, html, text }),
+        body: JSON.stringify({ from: FROM, to: TO, reply_to: data.email, subject, html, text }),
       });
       if (!r.ok) throw new Error(`Resend ${r.status}: ${(await r.text()).slice(0, 300)}`);
     } else if (process.env.POSTMARK_TOKEN) {
       const r = await fetch('https://api.postmarkapp.com/email', {
         method: 'POST',
         headers: { 'X-Postmark-Server-Token': process.env.POSTMARK_TOKEN, 'Content-Type': 'application/json', Accept: 'application/json' },
-        body: JSON.stringify({ From: FROM, To: TO, ReplyTo: data.email, Subject: subject, HtmlBody: html, TextBody: text, MessageStream: 'outbound' }),
+        body: JSON.stringify({ From: FROM, To: TO.join(', '), ReplyTo: data.email, Subject: subject, HtmlBody: html, TextBody: text, MessageStream: 'outbound' }),
       });
       if (!r.ok) throw new Error(`Postmark ${r.status}: ${(await r.text()).slice(0, 300)}`);
     } else {

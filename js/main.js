@@ -827,14 +827,6 @@
       enquiryStatus.setAttribute('data-state', kind || '');
     };
 
-    var mailtoFallback = function(d){
-      var body = 'Name: ' + d.name + '\nCompany: ' + d.company + '\nEmail: ' + d.email
-        + (d.phone ? '\nPhone: ' + d.phone : '') + (d.role ? '\nI am a: ' + d.role : '') + '\n\n' + d.message;
-      return 'mailto:enquiries@nexusconnecthk.com'
-        + '?subject=' + encodeURIComponent('Enquiry: ' + (d.subject || 'General Partnership'))
-        + '&body=' + encodeURIComponent(body);
-    };
-
     enquiryForm.addEventListener('submit', function(e){
       e.preventDefault();
       var d = {};
@@ -862,12 +854,17 @@
         say('');
         if (enquiryStatus) {
           enquiryStatus.setAttribute('data-state', 'error');
-          enquiryStatus.textContent = 'We couldn’t send that automatically. Please email us directly at ';
-          var a = document.createElement('a');
-          a.href = mailtoFallback(d);
-          a.textContent = 'enquiries@nexusconnecthk.com';
-          enquiryStatus.appendChild(a);
-          enquiryStatus.appendChild(document.createTextNode(' — your message is attached to that link.'));
+          enquiryStatus.textContent = 'We couldn’t send that just now. Your message is still here, so please try again in a moment, or call us on ';
+          var hk = document.createElement('a');
+          hk.href = 'tel:+85221512260';
+          hk.textContent = '+852 2151 2260';
+          enquiryStatus.appendChild(hk);
+          enquiryStatus.appendChild(document.createTextNode(' or '));
+          var za = document.createElement('a');
+          za.href = 'tel:+27761083699';
+          za.textContent = '+27 76 108 3699';
+          enquiryStatus.appendChild(za);
+          enquiryStatus.appendChild(document.createTextNode('.'));
         }
       }).then(function(){
         if (submitBtn) { submitBtn.disabled = false; }

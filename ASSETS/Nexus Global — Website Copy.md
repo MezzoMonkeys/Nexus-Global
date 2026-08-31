@@ -267,7 +267,7 @@ Whether you're a retailer exploring a new sourcing partnership, a brand looking 
 
 **Submit:** Send Enquiry
 
-*Submissions route via `/api/enquiry` to enquiries@nexusconnecthk.com. Honeypot field included.*
+*Submissions route via `/api/enquiry` to Keith@lincorholdings.com and tim@lincorholdings.com, set by the `ENQUIRY_TO` environment variable in Vercel. Honeypot field included. No address is published on the page.*
 
 ---
 
@@ -285,7 +285,7 @@ Regional coverage across South Africa, supporting retail and distribution partne
 +27 76 108 3699
 
 **General enquiries**
-enquiries@nexusconnecthk.com
+Use the enquiry form above, or call either office directly.
 
 **Footnote:** Nexus Global is a subsidiary of Lincor. Registered in Hong Kong.
 
@@ -340,7 +340,7 @@ Home (logo) · About · Network & Markets · Contact
 
 **Head office:** Unit B, 17th Floor, United Centre, 95 Queensway, Admiralty, Hong Kong
 
-**Get in touch:** +852 2151 2260 · +27 76 108 3699 · enquiries@nexusconnecthk.com
+**Get in touch:** +852 2151 2260 · +27 76 108 3699
 
 **Legal line:** © 2026 Nexus Global · A Lincor Company
 
