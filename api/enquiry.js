@@ -98,7 +98,14 @@ module.exports = async (req, res) => {
         try {
           const r = await fetch(`https://formsubmit.co/ajax/${encodeURIComponent(addr)}`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+            // The relay rejects calls with no browser origin, and a serverless
+            // function sends none, so state the site these submissions come from.
+            headers: {
+              'Content-Type': 'application/json',
+              Accept: 'application/json',
+              Origin: 'https://nexusconnecthk.com',
+              Referer: 'https://nexusconnecthk.com/contact',
+            },
             body: JSON.stringify({
               _subject: subject,
               _template: 'table',
@@ -108,8 +115,14 @@ module.exports = async (req, res) => {
               Message: data.message,
             }),
           });
+          // The relay answers 200 even when it refuses, so the JSON body, not the
+          // status, decides whether anything was actually delivered.
           const body = await r.text();
-          return { addr, ok: r.ok, body: body.slice(0, 200) };
+          let parsed = {};
+          try { parsed = JSON.parse(body); } catch { /* keep raw text below */ }
+          const sent = String(parsed.success) === 'true';
+          const pending = /activat/i.test(body);
+          return { addr, ok: sent, pending, body: body.slice(0, 200) };
         } catch (e) {
           return { addr, ok: false, body: String(e && e.message).slice(0, 200) };
         }
@@ -118,13 +131,14 @@ module.exports = async (req, res) => {
       results.filter(x => !x.ok).forEach(x =>
         console.error('[enquiry] relay failed for', x.addr, x.body));
       if (!delivered.length) {
-        throw new Error('relay rejected every recipient');
+        // Every recipient awaiting their one-time confirmation is a setup state,
+        // not a visitor's fault, but the message did not arrive either way - so
+        // report the failure rather than a false success.
+        const waiting = results.filter(x => x.pending).map(x => x.addr);
+        if (waiting.length) console.error('[enquiry] recipients not yet confirmed:', waiting.join(', '));
+        throw new Error('relay delivered to no recipient');
       }
-      // A recipient who has not yet confirmed gets an activation mail instead of
-      // the enquiry. Log it so the first-run state is visible, but still report
-      // success: the sender did nothing wrong and their message is queued.
-      delivered.filter(x => /activat|confirm/i.test(x.body)).forEach(x =>
-        console.warn('[enquiry] awaiting one-time confirmation:', x.addr));
+
     }
   } catch (err) {
     console.error('[enquiry] send failed:', err && err.message);
