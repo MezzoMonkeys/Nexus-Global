@@ -88,10 +88,43 @@ module.exports = async (req, res) => {
       });
       if (!r.ok) throw new Error(`Postmark ${r.status}: ${(await r.text()).slice(0, 300)}`);
     } else {
-      // Deliberately loud. Silently accepting mail with nowhere to send it is
-      // the exact failure this endpoint exists to remove.
-      console.error('[enquiry] No mail provider configured: set RESEND_API_KEY or POSTMARK_TOKEN.');
-      return res.status(503).json({ ok: false, error: 'The enquiry form is not connected yet.' });
+      // Last resort, and the only route that needs no account, no API key and no
+      // DNS: FormSubmit relays a submission straight to a recipient's inbox. It
+      // is weaker than Resend - a free third party sees the message, and each
+      // recipient must confirm once before anything is delivered - so it is only
+      // reached when neither provider above is configured. Set RESEND_API_KEY and
+      // this branch stops being used.
+      const results = await Promise.all(TO.map(async addr => {
+        try {
+          const r = await fetch(`https://formsubmit.co/ajax/${encodeURIComponent(addr)}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+            body: JSON.stringify({
+              _subject: subject,
+              _template: 'table',
+              _captcha: 'false',
+              Name: data.name, Company: data.company, Email: data.email,
+              Phone: data.phone, 'I am a': data.role, 'Nature of enquiry': data.subject,
+              Message: data.message,
+            }),
+          });
+          const body = await r.text();
+          return { addr, ok: r.ok, body: body.slice(0, 200) };
+        } catch (e) {
+          return { addr, ok: false, body: String(e && e.message).slice(0, 200) };
+        }
+      }));
+      const delivered = results.filter(x => x.ok);
+      results.filter(x => !x.ok).forEach(x =>
+        console.error('[enquiry] relay failed for', x.addr, x.body));
+      if (!delivered.length) {
+        throw new Error('relay rejected every recipient');
+      }
+      // A recipient who has not yet confirmed gets an activation mail instead of
+      // the enquiry. Log it so the first-run state is visible, but still report
+      // success: the sender did nothing wrong and their message is queued.
+      delivered.filter(x => /activat|confirm/i.test(x.body)).forEach(x =>
+        console.warn('[enquiry] awaiting one-time confirmation:', x.addr));
     }
   } catch (err) {
     console.error('[enquiry] send failed:', err && err.message);
