@@ -28,10 +28,10 @@
  * The remaining ~30% saving a real minifier would add is not worth taking a
  * dependency and a class of silent-breakage bugs for on a four-page site.
  *
- * api/ is NOT processed. It is a serverless function, not a browser asset, it is
- * never on the critical path, and it is the one file here that contains regex
- * literals - the hardest thing for a comment scanner to get right. No reason to
- * take the risk for no gain.
+ * api/ is NOT processed. Those are serverless functions, not browser assets,
+ * they are never on the critical path, and they are the only files here that
+ * contain regex literals - the hardest thing for a comment scanner to get
+ * right. No reason to take the risk for no gain.
  */
 'use strict';
 const fs = require('fs');

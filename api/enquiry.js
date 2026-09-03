@@ -6,12 +6,15 @@
 // a site whose only conversion path is this form, lost enquiries also make any
 // organic-traffic work impossible to measure.
 //
-// Provider-agnostic on purpose, and with no npm dependencies: both providers
-// below are plain HTTPS calls over the runtime's built-in fetch, so this ships
-// without a package.json, a lockfile, or an install step on a site that is
-// otherwise entirely static. Set ONE of RESEND_API_KEY or POSTMARK_TOKEN in the
-// Vercel project and it starts working; set neither and it returns a clear 503
-// that says so, rather than accepting the message and dropping it.
+// Two steps, in this order: log the enquiry to Supabase, then send it through
+// Resend. Logging first is the whole point of logging - if Resend is down, or
+// the mail bounces off both inboxes, the enquiry still exists somewhere we can
+// go and read it. The reverse order would leave a failed send with nothing to
+// show for it.
+//
+// No npm dependencies: both calls are plain HTTPS over the runtime's built-in
+// fetch, so this ships without a package.json, a lockfile, or an install step
+// on a site that is otherwise entirely static.
 
 const FIELDS = ['name', 'company', 'email', 'phone', 'role', 'subject', 'message'];
 const REQUIRED = ['name', 'company', 'email', 'message'];
@@ -22,6 +25,26 @@ const MAX = { name: 120, company: 160, email: 200, phone: 60, role: 60, subject:
 // rather than at the point of use, so no later caller has to remember to do it.
 const MULTILINE = new Set(['message']);
 
+// Human labels for the notification email. The column names are fine in a
+// database and terse in an inbox.
+const LABELS = {
+  name: 'Name',
+  company: 'Company',
+  email: 'Email',
+  phone: 'Phone',
+  role: 'They are a',
+  subject: 'Nature of enquiry',
+  message: 'Message',
+};
+
+// Nothing here should ever take long enough to hold a serverless invocation
+// open. A hung upstream is a failure, so give each call a deadline of its own.
+// Three of these run back to back in the worst case (insert, send, patch), so
+// the total has to stay comfortably inside the maxDuration set for api/** in
+// vercel.json - otherwise a slow upstream hands the visitor a 504 after the
+// mail has already gone, which is the one outcome with no recovery path.
+const TIMEOUT_MS = 6000;
+
 const clean = v => String(v == null ? '' : v)
   .replace(/\0/g, '')          // NUL truncates strings in some downstream systems
   .replace(/\r\n?/g, '\n')     // normalise CRLF/CR so length limits count real characters
@@ -30,6 +53,43 @@ const clean = v => String(v == null ? '' : v)
 const oneLine = v => clean(v).replace(/\n+/g, ' ').slice(0, 200);
 const escapeHtml = v => clean(v).replace(/[&<>"']/g, c =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+// Supabase, over PostgREST. The service role key bypasses RLS, which is exactly
+// what this table needs: it carries no policies, so an enquirer's message and
+// contact details stay invisible to the platform's logged-in factories and
+// clients even if one of their keys leaks.
+//
+// Supabase has two generations of secret key and they want different headers.
+// The legacy service_role key is a JWT (eyJ...) and goes in both apikey and
+// Authorization, as everything has always done. The newer sb_secret_... keys
+// are opaque, not JWTs, and are *rejected* on an Authorization: Bearer header -
+// they must travel on apikey alone. Sniffing the format means either key works
+// and whoever sets the env var cannot pick the wrong one.
+//
+// Three lines of this are duplicated in resend-webhook.mjs rather than shared:
+// every file under api/ is deployed as its own function, so a shared module
+// there would become a third public endpoint.
+const sbHeaders = key => ({
+  apikey: key,
+  ...(key.startsWith('eyJ') ? { Authorization: `Bearer ${key}` } : {}),
+  'Content-Type': 'application/json',
+});
+
+const sb = async (path, init) => {
+  const url = process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) throw new Error('Supabase not configured');
+  const r = await fetch(`${url.replace(/\/+$/, '')}/rest/v1/${path}`, {
+    ...init,
+    headers: {
+      ...sbHeaders(key),
+      ...(init && init.headers),
+    },
+    signal: AbortSignal.timeout(TIMEOUT_MS),
+  });
+  if (!r.ok) throw new Error(`Supabase ${r.status}: ${(await r.text()).slice(0, 300)}`);
+  return r;
+};
 
 module.exports = async (req, res) => {
   res.setHeader('X-Robots-Tag', 'noindex, nofollow');
@@ -45,7 +105,7 @@ module.exports = async (req, res) => {
 
   // Honeypot. A real person never sees this field, so anything in it is a bot.
   // Answer 200 rather than an error: a rejection tells the sender to retry
-  // differently, silence does not.
+  // differently, silence does not. Nothing is logged or sent.
   if (clean(body.website)) return res.status(200).json({ ok: true });
 
   const data = {};
@@ -59,89 +119,106 @@ module.exports = async (req, res) => {
     return res.status(400).json({ ok: false, error: 'That email address does not look right.', fields: ['email'] });
   }
 
-  // ENQUIRY_TO may list several recipients, comma-separated. Resend wants them as
-  // an array and Postmark as a comma-joined string, so parse once and format per
-  // provider rather than making the env var's shape a provider detail.
-  const TO = (process.env.ENQUIRY_TO || 'Keith@lincorholdings.com,tim@lincorholdings.com')
+  // ENQUIRY_TO may list several recipients, comma-separated, so the pair of
+  // people who receive these can change without a deploy.
+  const TO = (process.env.ENQUIRY_TO || 'keith@lincorholdings.com,tim@lincorholdings.com')
     .split(',').map(s => s.trim()).filter(Boolean);
-  const FROM = process.env.ENQUIRY_FROM || 'website@nexusconnecthk.com';
+  const FROM = process.env.ENQUIRY_FROM || 'Nexus Global <website@nexusconnecthk.com>';
+
+  if (!process.env.RESEND_API_KEY) {
+    console.error('[enquiry] RESEND_API_KEY is not set; refusing to accept a message we cannot send');
+    return res.status(503).json({ ok: false, error: 'The enquiry form is not configured yet.' });
+  }
+
+  // Step one: the durable record. A logging failure must not cost us the
+  // enquiry, so it is reported and stepped over rather than thrown - the mail
+  // below is the part the sender is waiting on. Vercel's edge headers give us
+  // the market the enquiry came from without retaining an IP address, which is
+  // personal data under both GDPR and POPIA and answers no question we have.
+  let id = null;
+  try {
+    const r = await sb('nc_website_enquiries', {
+      method: 'POST',
+      headers: { Prefer: 'return=representation' },
+      body: JSON.stringify({
+        ...data,
+        phone: data.phone || null,
+        role: data.role || null,
+        subject: data.subject || null,
+        source_page: oneLine(req.headers['referer'] || '/contact'),
+        country: oneLine(req.headers['x-vercel-ip-country'] || '') || null,
+        user_agent: oneLine(req.headers['user-agent'] || '') || null,
+        notified_to: TO,
+      }),
+    });
+    const rows = await r.json();
+    id = (Array.isArray(rows) && rows[0] && rows[0].id) || null;
+  } catch (err) {
+    console.error('[enquiry] could not log to Supabase:', err && err.message);
+  }
+
   const subject = `Website enquiry, ${oneLine(data.subject) || 'General'}, ${oneLine(data.company)}`;
   const rows = FIELDS.filter(f => data[f]).map(f =>
-    `<tr><td style="padding:4px 12px 4px 0;vertical-align:top"><strong>${f}</strong></td>` +
+    `<tr><td style="padding:4px 12px 4px 0;vertical-align:top"><strong>${LABELS[f]}</strong></td>` +
     `<td style="padding:4px 0">${escapeHtml(data[f]).replace(/\n/g, '<br>')}</td></tr>`).join('');
-  const html = `<table style="font-family:system-ui,sans-serif;font-size:14px">${rows}</table>`;
-  const text = FIELDS.filter(f => data[f]).map(f => `${f}: ${data[f]}`).join('\n');
+  // The reference is the Supabase row id, so a reply in an inbox can always be
+  // traced back to the logged enquiry. Omitted entirely when logging failed,
+  // rather than printed as a reassuring but meaningless blank.
+  const ref = id ? `<p style="color:#666;font-size:12px;margin-top:16px">Reference ${id}</p>` : '';
+  const html = `<table style="font-family:system-ui,sans-serif;font-size:14px">${rows}</table>${ref}`;
+  const text = FIELDS.filter(f => data[f]).map(f => `${LABELS[f]}: ${data[f]}`).join('\n')
+    + (id ? `\n\nReference ${id}` : '');
 
+  // Step two: the mail. reply_to is the enquirer, so hitting reply in either
+  // inbox answers the customer rather than the website.
   try {
-    if (process.env.RESEND_API_KEY) {
-      const r = await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ from: FROM, to: TO, reply_to: data.email, subject, html, text }),
-      });
-      if (!r.ok) throw new Error(`Resend ${r.status}: ${(await r.text()).slice(0, 300)}`);
-    } else if (process.env.POSTMARK_TOKEN) {
-      const r = await fetch('https://api.postmarkapp.com/email', {
-        method: 'POST',
-        headers: { 'X-Postmark-Server-Token': process.env.POSTMARK_TOKEN, 'Content-Type': 'application/json', Accept: 'application/json' },
-        body: JSON.stringify({ From: FROM, To: TO.join(', '), ReplyTo: data.email, Subject: subject, HtmlBody: html, TextBody: text, MessageStream: 'outbound' }),
-      });
-      if (!r.ok) throw new Error(`Postmark ${r.status}: ${(await r.text()).slice(0, 300)}`);
-    } else {
-      // Last resort, and the only route that needs no account, no API key and no
-      // DNS: FormSubmit relays a submission straight to a recipient's inbox. It
-      // is weaker than Resend - a free third party sees the message, and each
-      // recipient must confirm once before anything is delivered - so it is only
-      // reached when neither provider above is configured. Set RESEND_API_KEY and
-      // this branch stops being used.
-      const results = await Promise.all(TO.map(async addr => {
-        try {
-          const r = await fetch(`https://formsubmit.co/ajax/${encodeURIComponent(addr)}`, {
-            method: 'POST',
-            // The relay rejects calls with no browser origin, and a serverless
-            // function sends none, so state the site these submissions come from.
-            headers: {
-              'Content-Type': 'application/json',
-              Accept: 'application/json',
-              Origin: 'https://nexusconnecthk.com',
-              Referer: 'https://nexusconnecthk.com/contact',
-            },
-            body: JSON.stringify({
-              _subject: subject,
-              _template: 'table',
-              _captcha: 'false',
-              Name: data.name, Company: data.company, Email: data.email,
-              Phone: data.phone, 'I am a': data.role, 'Nature of enquiry': data.subject,
-              Message: data.message,
-            }),
-          });
-          // The relay answers 200 even when it refuses, so the JSON body, not the
-          // status, decides whether anything was actually delivered.
-          const body = await r.text();
-          let parsed = {};
-          try { parsed = JSON.parse(body); } catch { /* keep raw text below */ }
-          const sent = String(parsed.success) === 'true';
-          const pending = /activat/i.test(body);
-          return { addr, ok: sent, pending, body: body.slice(0, 200) };
-        } catch (e) {
-          return { addr, ok: false, body: String(e && e.message).slice(0, 200) };
-        }
-      }));
-      const delivered = results.filter(x => x.ok);
-      results.filter(x => !x.ok).forEach(x =>
-        console.error('[enquiry] relay failed for', x.addr, x.body));
-      if (!delivered.length) {
-        // Every recipient awaiting their one-time confirmation is a setup state,
-        // not a visitor's fault, but the message did not arrive either way - so
-        // report the failure rather than a false success.
-        const waiting = results.filter(x => x.pending).map(x => x.addr);
-        if (waiting.length) console.error('[enquiry] recipients not yet confirmed:', waiting.join(', '));
-        throw new Error('relay delivered to no recipient');
-      }
+    const r = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+        'Content-Type': 'application/json',
+        // A double-clicked submit button, or Vercel retrying the invocation,
+        // must not put the same enquiry in front of Keith and Tim twice. The
+        // row id is unique per submission and is the natural key for it.
+        ...(id ? { 'Idempotency-Key': `enquiry-${id}` } : {}),
+      },
+      body: JSON.stringify({ from: FROM, to: TO, reply_to: data.email, subject, html, text }),
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+    });
+    if (!r.ok) throw new Error(`Resend ${r.status}: ${(await r.text()).slice(0, 300)}`);
 
+    // Resend's id is what the delivery webhook arrives quoting, so it is the
+    // join between this row and everything that happens to the message later.
+    const sent = await r.json().catch(() => ({}));
+    if (id && sent.id) {
+      try {
+        await sb(`nc_website_enquiries?id=eq.${encodeURIComponent(id)}`, {
+          method: 'PATCH',
+          headers: { Prefer: 'return=minimal' },
+          body: JSON.stringify({ resend_message_id: sent.id, delivery_status: 'sent' }),
+        });
+      } catch (err) {
+        // The mail is away; not recording its id only costs us the delivery
+        // trail, and is not worth failing the visitor's submission over.
+        console.error('[enquiry] could not attach Resend id to', id, err && err.message);
+      }
     }
   } catch (err) {
     console.error('[enquiry] send failed:', err && err.message);
+    if (id) {
+      try {
+        await sb(`nc_website_enquiries?id=eq.${encodeURIComponent(id)}`, {
+          method: 'PATCH',
+          headers: { Prefer: 'return=minimal' },
+          body: JSON.stringify({ delivery_status: 'failed' }),
+        });
+      } catch (e) {
+        console.error('[enquiry] could not mark', id, 'failed:', e && e.message);
+      }
+    }
+    // Tell the sender it did not go through even though we hold a copy. The
+    // alternative - a thank-you for a message nobody has been told about - is
+    // worse: they would stop chasing an enquiry that nobody is reading.
     return res.status(502).json({ ok: false, error: 'We could not send that just now.' });
   }
 
