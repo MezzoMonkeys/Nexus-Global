@@ -174,20 +174,62 @@
       scene.add(new THREE.Points(geo, mat));
       resize();
 
-      var targetMouse = new THREE.Vector2(0, 0), targetStr = 0;
-      if (!reduceMotion){
-        window.addEventListener('mousemove', function(e){
-          var rect = renderer.domElement.getBoundingClientRect();
-          var nx = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-          var ny = -(((e.clientY - rect.top) / rect.height) * 2 - 1);
-          targetMouse.set(nx, ny);
-          targetStr = 1;
-        });
-      }
-
       var rot4 = new THREE.Matrix4();
       var tilt = new THREE.Matrix4().makeRotationX(0.16);
       var angle = -1.15;
+
+      // reduced motion never animates: the assembled globe is static (uTime,
+      // uMorph and the rotation angle never change), so rendering it every
+      // frame forever burns CPU on an identical image. Render it once and stop.
+      if (reduceMotion){
+        rot4.makeRotationY(angle); rot4.multiply(tilt);
+        mat.uniforms.uRot.value.setFromMatrix4(rot4);
+        renderer.render(scene, camera);
+        window.addEventListener('resize', function(){ renderer.render(scene, camera); });
+        return;
+      }
+
+      // Off-screen and backgrounded pauses. PageSpeed/Lighthouse traces the
+      // hero for the length of the run with the tab focused and the globe on
+      // screen, which is exactly the case neither of these two helps with —
+      // that's what the frame-rate cap further down is for — but for a real
+      // visitor who scrolls the hero away or switches tabs, this is the
+      // difference between an animation loop that idles and one that keeps
+      // rendering an off-screen canvas indefinitely.
+      var onScreen = true;
+      if ('IntersectionObserver' in window){
+        new IntersectionObserver(function(entries){
+          onScreen = entries[0].isIntersecting;
+        }, { rootMargin: '200px 0px' }).observe(stage);
+      }
+      var pageVisible = document.visibilityState !== 'hidden';
+      document.addEventListener('visibilitychange', function(){
+        pageVisible = document.visibilityState !== 'hidden';
+      });
+
+      // Frame-rate cap. The shader does all the per-frame position work on the
+      // GPU — this loop only updates a few uniforms and calls renderer.render()
+      // — but PageSpeed's trace runs Chrome's software (non-GPU-accelerated)
+      // rasterizer, where render() itself is the expensive part. Capping to a
+      // still-smooth 30fps for this purely decorative background halves that
+      // cost with no visible loss of quality. Motion is scaled by the actual
+      // elapsed time between rendered frames (frameScale, normalised to a 60fps
+      // baseline) rather than assumed per-frame, so the globe spins and reacts
+      // to the cursor at the same real-world speed as before — only the render
+      // rate itself drops, not the animation.
+      var TARGET_FPS = 30;
+      var FRAME_BUDGET = 1000 / TARGET_FPS;
+      var lastFrame = 0;
+
+      var targetMouse = new THREE.Vector2(0, 0), targetStr = 0;
+      window.addEventListener('mousemove', function(e){
+        var rect = renderer.domElement.getBoundingClientRect();
+        var nx = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+        var ny = -(((e.clientY - rect.top) / rect.height) * 2 - 1);
+        targetMouse.set(nx, ny);
+        targetStr = 1;
+      });
+
       var t0 = 0;
 
       // ── Scroll response ──────────────────────────────────────────────────────
@@ -212,33 +254,37 @@
       window.addEventListener('resize', function(){ scrollSpan = window.innerHeight || 800; });
 
       function animate(ts){
-        var vh = window.innerHeight || 800;
-        if ((window.pageYOffset || 0) < vh * 2.4) {
-          if (!t0) t0 = ts;
-          var el = (ts - t0) / 1000;
-          var a = reduceMotion ? 1 : Math.min(el / ASSEMBLE_SECONDS, 1);
-          a = 1 - Math.pow(1 - a, 3);              // easeOutCubic
-          if (!reduceMotion){
-            mat.uniforms.uTime.value = el;
-            mat.uniforms.uAssemble.value = a;
-            var scrubP = Math.min(Math.max((window.pageYOffset || 0) / scrollSpan, 0), 1);
-            // Scaled by the assemble progress so a scroll during the 1.9s intro
-            // can't have the dots forming and flying apart at the same time. The
-            // old scroll gate got this for free by pinning morph to 0 until it
-            // released; multiplying by `a` is the equivalent without the lock, and
-            // eases in rather than popping. easeOutCubic puts `a` past 0.87 within
-            // half the intro, so the suppression window is brief.
-            mat.uniforms.uMorph.value = scrubP * a;
-            mat.uniforms.uSphereY.value = SPHERE_Y_HOME1 + (SPHERE_Y_HOME2 - SPHERE_Y_HOME1) * scrubP;
-            angle += (a < 1) ? (0.006 * (1 - a) + 0.0016) : 0.0016;   // spins faster while assembling (spiral)
-            mat.uniforms.uMouse.value.lerp(targetMouse, 0.14);
-            mat.uniforms.uMouseStr.value += (targetStr - mat.uniforms.uMouseStr.value) * 0.08;
-          } else {
-            mat.uniforms.uMorph.value = 0;
+        if (onScreen && pageVisible) {
+          if (!lastFrame) lastFrame = ts - FRAME_BUDGET;
+          var dt = ts - lastFrame;
+          if (dt >= FRAME_BUDGET) {
+            var frameScale = Math.min(dt, 100) / (1000 / 60);
+            lastFrame = ts;
+            var vh = window.innerHeight || 800;
+            if ((window.pageYOffset || 0) < vh * 2.4) {
+              if (!t0) t0 = ts;
+              var el = (ts - t0) / 1000;
+              var a = Math.min(el / ASSEMBLE_SECONDS, 1);
+              a = 1 - Math.pow(1 - a, 3);              // easeOutCubic
+              mat.uniforms.uTime.value = el;
+              mat.uniforms.uAssemble.value = a;
+              var scrubP = Math.min(Math.max((window.pageYOffset || 0) / scrollSpan, 0), 1);
+              // Scaled by the assemble progress so a scroll during the 1.9s intro
+              // can't have the dots forming and flying apart at the same time. The
+              // old scroll gate got this for free by pinning morph to 0 until it
+              // released; multiplying by `a` is the equivalent without the lock, and
+              // eases in rather than popping. easeOutCubic puts `a` past 0.87 within
+              // half the intro, so the suppression window is brief.
+              mat.uniforms.uMorph.value = scrubP * a;
+              mat.uniforms.uSphereY.value = SPHERE_Y_HOME1 + (SPHERE_Y_HOME2 - SPHERE_Y_HOME1) * scrubP;
+              angle += ((a < 1) ? (0.006 * (1 - a) + 0.0016) : 0.0016) * frameScale;   // spins faster while assembling (spiral)
+              mat.uniforms.uMouse.value.lerp(targetMouse, Math.min(0.14 * frameScale, 1));
+              mat.uniforms.uMouseStr.value += (targetStr - mat.uniforms.uMouseStr.value) * Math.min(0.08 * frameScale, 1);
+              rot4.makeRotationY(angle); rot4.multiply(tilt);
+              mat.uniforms.uRot.value.setFromMatrix4(rot4);
+              renderer.render(scene, camera);
+            }
           }
-          rot4.makeRotationY(angle); rot4.multiply(tilt);
-          mat.uniforms.uRot.value.setFromMatrix4(rot4);
-          renderer.render(scene, camera);
         }
         requestAnimationFrame(animate);
       }

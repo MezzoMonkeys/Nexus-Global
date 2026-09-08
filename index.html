@@ -69,8 +69,8 @@
 <header class="nav" id="nav" role="banner">
   <a class="nav__brand" href="/" aria-label="Nexus Global, Home">
     <span class="nav__logo">
-      <img class="nav__logo-img nav__logo-img--on-light" src="/IMAGERY/DarkFavicon.svg" alt="" aria-hidden="true" width="34" height="34">
-      <img class="nav__logo-img nav__logo-img--on-dark" src="/IMAGERY/LightFavicon.svg" alt="" aria-hidden="true" width="34" height="34">
+      <img class="nav__logo-img nav__logo-img--on-light" src="/IMAGERY/DarkFavicon.svg" alt="" aria-hidden="true" width="34" height="34" fetchpriority="high">
+      <img class="nav__logo-img nav__logo-img--on-dark" src="/IMAGERY/LightFavicon.svg" alt="" aria-hidden="true" width="34" height="34" fetchpriority="high">
     </span>
   </a>
   <nav class="nav__links" id="navLinks" aria-label="Main navigation">
@@ -304,14 +304,20 @@
      d3 is the SUBSET, not the full bundle: the globe calls exactly two d3 APIs,
      geoEquirectangular and geoPath, so d3-array + d3-geo (53KB) replaces d3@7
      (~280KB). Verified against the full build - identical projection output and
-     identical canvas draw calls. d3-array MUST stay ahead of d3-geo: the d3-geo
-     UMD reads its array helpers off the global d3 object that d3-array creates.
-     defer is on ALL FIVE, and that is load-bearing. particle-globe.js opens with
-     a guard that returns silently if THREE, d3 or topojson are undefined, so
-     deferring the libraries while leaving it non-deferred would put it first and
-     kill the globe with no error. Deferred scripts run in document order, so the
-     sequence below is exactly the order they execute in. -->
-<script defer src="/js/vendor/three-0.128.0.min.js"></script>
+     identical canvas draw calls. Same idea for three: particle-globe.js only
+     ever touches 12 of its exports (Scene, PerspectiveCamera, WebGLRenderer,
+     Color, Matrix3, Matrix4, Vector2, BufferGeometry, Float32BufferAttribute,
+     ShaderMaterial, Points, NormalBlending), so three-custom is an esbuild
+     bundle of exactly those, built from the same three@0.128.0 source as the
+     full UMD build - real dead-code elimination through three's own ES
+     modules, not a hand-picked file subset like d3's. ~90KB smaller, byte-
+     identical rendering. Assigns the same window.THREE global, so nothing else
+     here changes. defer is on ALL FIVE, and that is load-bearing. particle-globe.js
+     opens with a guard that returns silently if THREE, d3 or topojson are
+     undefined, so deferring the libraries while leaving it non-deferred would
+     put it first and kill the globe with no error. Deferred scripts run in
+     document order, so the sequence below is exactly the order they execute in. -->
+<script defer src="/js/vendor/three-custom-0.128.0.min.js"></script>
 <script defer src="/js/vendor/d3-array-3.2.4.min.js"></script>
 <script defer src="/js/vendor/d3-geo-3.1.1.min.js"></script>
 <script defer src="/js/vendor/topojson-client-3.1.0.min.js"></script>
