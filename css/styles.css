@@ -144,12 +144,14 @@ a{color:inherit;text-decoration:none}
 .nav__links{grid-column:2;position:relative;justify-self:center;display:flex;align-items:center;gap:2px;padding:7px 9px;border-radius:999px;background:var(--ink-06);border:1px solid var(--ink-10);backdrop-filter:blur(20px) saturate(140%);-webkit-backdrop-filter:blur(20px) saturate(140%);transition:background .35s var(--ease),border-color .35s var(--ease)}
 .nav.dark .nav__links{background:var(--plat-10);border-color:var(--plat-18)}
 /* Active pill is Forest Grove in BOTH contexts — it's the brand's active state,
-   not a tonal inversion of the surface. Platinum on it measures 4.82:1, which is
-   AA for these 11px labels. */
+   not a tonal inversion of the surface. White on it measures 4.82:1, which is
+   AA for these 11px labels — Platinum (--platinum, #ededed) is close enough to
+   read as the same colour but only reaches 4.06:1, failing AA, so the pill text
+   is pinned to literal white rather than the usual light-surface token. */
 .nav__indicator{position:absolute;top:0;left:0;width:0;border-radius:999px;background:var(--accent);transition:transform .35s var(--ease),width .35s var(--ease);z-index:0;pointer-events:none}
 .nav__links a{position:relative;z-index:1;padding:8px 15px;font-family:var(--font-label);font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;border-radius:999px;color:inherit;opacity:.62;transition:opacity .25s var(--ease),color .25s var(--ease);white-space:nowrap}
 .nav__links a:hover{opacity:1}
-.nav__links a.active,.nav__links a.pill-active,.nav.dark .nav__links a.active,.nav.dark .nav__links a.pill-active{color:var(--platinum);opacity:1}
+.nav__links a.active,.nav__links a.pill-active,.nav.dark .nav__links a.active,.nav.dark .nav__links a.pill-active{color:#fff;opacity:1}
 
 .nav__menu-btn{grid-column:3;justify-self:end;display:none;background:transparent;border:1px solid currentColor;border-radius:999px;padding:8px 15px;font-family:var(--font-label);font-size:10px;font-weight:500;letter-spacing:.10em;text-transform:uppercase;color:inherit;transition:border-color .25s var(--ease),color .25s var(--ease)}
 .nav__menu-btn:hover,.nav__menu-btn:active{border-color:var(--accent);color:var(--accent)}
@@ -376,9 +378,11 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
 /* The primary filled button is Forest Grove in BOTH light and dark contexts —
    it's the brand's action colour, so it shouldn't invert with the surface the way
    a neutral button would. That's also why the old .page--dark override is gone.
-   Platinum on --accent is 4.82:1, and on --accent-deep 7.9:1, both AA. */
-.btn-pill--fill{background:var(--accent);color:var(--platinum);border-color:var(--accent)}
-.btn-pill:hover,.btn-pill:active{background:var(--accent);color:var(--platinum);border-color:var(--accent)}
+   White on --accent is 4.82:1, and on --accent-deep 7.9:1, both AA — Platinum
+   only reaches 4.06:1 on --accent, failing AA, so the fill's text is literal
+   white rather than the usual light-surface token. */
+.btn-pill--fill{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn-pill:hover,.btn-pill:active{background:var(--accent);color:#fff;border-color:var(--accent)}
 /* A green button hovering to the same green would be a dead state, so the filled
    variant deepens instead. Must stay AFTER the generic hover above: equal
    specificity (0,2,0), so source order is what decides it. */
@@ -1341,7 +1345,7 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
 /* Contact / enquiry form */
 .contact-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:56px;flex:1}
 .contact-details{display:grid;grid-template-columns:1fr 1fr;gap:28px 40px;margin:32px 0 0}
-.contact-details h4{font-family:var(--font-label);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--plat-55);font-weight:500;margin:0 0 10px}
+.contact-details h3{font-family:var(--font-label);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--plat-55);font-weight:500;margin:0 0 10px}
 .contact-details p,.contact-details a{font-family:var(--font-body);font-size:14.5px;line-height:1.55;color:var(--plat-85);margin:0}
 .contact-details a:hover{color:var(--platinum);text-decoration:underline}
 @media(max-width:900px){.contact-grid{grid-template-columns:1fr}.contact-details{grid-template-columns:1fr}}
