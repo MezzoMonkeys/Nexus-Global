@@ -160,6 +160,19 @@
               <label for="f-website">Leave this field empty</label>
               <input type="text" id="f-website" name="website" tabindex="-1" autocomplete="off">
             </div>
+            <!-- Timing trap. main.js stamps this with the time the form became
+                 interactive; the server rejects a submission that arrives faster
+                 than a person could plausibly have read the form and typed into
+                 it. A script that posts straight to /api/enquiry without ever
+                 loading main.js sends this empty, which fails the same check. -->
+            <input type="hidden" id="f-ts" name="ts" value="">
+            <!-- Cloudflare Turnstile. Renders into this div and injects its own
+                 cf-turnstile-response input alongside it once the challenge
+                 completes; main.js reads that value at submit time and the
+                 server verifies it with Cloudflare before accepting the message.
+                 Site keys are public by design, unlike the matching secret key,
+                 which lives only in the TURNSTILE_SECRET_KEY env var. -->
+            <div class="cf-turnstile" data-sitekey="0x4AAAAAAE2AJ7pzgS8qVdic" data-theme="dark"></div>
             <button type="submit" class="btn-pill btn-pill--fill enquiry-form__submit">Send Enquiry</button>
             <!-- Status region, inside the grid so it spans the columns and picks
                  up the grid's own 16px gap rather than inventing its own margin.
@@ -312,6 +325,7 @@
 <button class="back-to-top arrow-btn" id="backToTop" aria-label="Back to top">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
 </button>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 <script defer src="/js/main.js"></script>
 </body>
 </html>

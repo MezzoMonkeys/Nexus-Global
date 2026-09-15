@@ -45,6 +45,14 @@ const LABELS = {
 // mail has already gone, which is the one outcome with no recovery path.
 const TIMEOUT_MS = 6000;
 
+// Timing trap. main.js stamps `ts` with Date.now() as soon as the form is
+// interactive; a submission that lands sooner than a person could plausibly
+// have read the form and typed into it is a script, not a visitor. 2.5s is
+// generous - it is well under how long even a fast human takes on a form with
+// six required-ish fields, chosen to keep false positives at effectively zero
+// rather than to catch every bot.
+const MIN_FILL_MS = 2500;
+
 const clean = v => String(v == null ? '' : v)
   .replace(/\0/g, '')          // NUL truncates strings in some downstream systems
   .replace(/\r\n?/g, '\n')     // normalise CRLF/CR so length limits count real characters
@@ -91,6 +99,35 @@ const sb = async (path, init) => {
   return r;
 };
 
+// Cloudflare Turnstile. Unlike the honeypot and timing trap, this is a widget
+// the visitor can see solve itself, so a failure here is told to them plainly
+// and they are invited to retry - silence would just look like a broken form.
+// remoteip is best-effort: Vercel's forwarded-for can hold a list or be
+// absent behind some proxies, and Cloudflare accepts the field being omitted.
+const verifyTurnstile = async (token, ip) => {
+  const secret = process.env.TURNSTILE_SECRET_KEY;
+  if (!secret) {
+    console.error('[enquiry] TURNSTILE_SECRET_KEY is not set; refusing to accept a message we cannot verify');
+    return false;
+  }
+  if (!token) return false;
+  try {
+    const body = new URLSearchParams({ secret, response: token });
+    if (ip) body.set('remoteip', ip);
+    const r = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body,
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+    });
+    const j = await r.json();
+    return j && j.success === true;
+  } catch (err) {
+    console.error('[enquiry] Turnstile verification failed:', err && err.message);
+    return false;
+  }
+};
+
 module.exports = async (req, res) => {
   res.setHeader('X-Robots-Tag', 'noindex, nofollow');
 
@@ -107,6 +144,20 @@ module.exports = async (req, res) => {
   // Answer 200 rather than an error: a rejection tells the sender to retry
   // differently, silence does not. Nothing is logged or sent.
   if (clean(body.website)) return res.status(200).json({ ok: true });
+
+  // Timing trap. Same silent-200 treatment as the honeypot, and for the same
+  // reason: a script hitting this endpoint directly never sends `ts` at all,
+  // and one replaying main.js's own timestamp still cannot make the *request*
+  // arrive later than it actually did.
+  const elapsed = Date.now() - Number(body.ts);
+  if (!Number.isFinite(elapsed) || elapsed < MIN_FILL_MS) return res.status(200).json({ ok: true });
+
+  // Turnstile. The one check a genuine visitor can see and retry, so it gets
+  // a real error rather than a silent success.
+  const ip = oneLine(req.headers['x-forwarded-for'] || '').split(',')[0].trim() || undefined;
+  if (!(await verifyTurnstile(body['cf-turnstile-response'], ip))) {
+    return res.status(400).json({ ok: false, error: 'That verification challenge did not go through. Please try again.' });
+  }
 
   const data = {};
   for (const f of FIELDS) {

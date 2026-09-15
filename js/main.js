@@ -821,16 +821,41 @@
     var submitBtn = enquiryForm.querySelector('[type="submit"]');
     var FIELDS = ['name','company','email','phone','role','subject','message','website'];
 
+    // Timing trap. Stamped the moment the form is ready rather than on first
+    // keystroke, so the server's minimum-elapsed check measures the whole time
+    // a person had the form in front of them, not just their typing speed.
+    var tsField = document.getElementById('f-ts');
+    if (tsField) { tsField.value = String(Date.now()); }
+
     var say = function(msg, kind){
       if (!enquiryStatus) return;
       enquiryStatus.textContent = msg;
       enquiryStatus.setAttribute('data-state', kind || '');
     };
 
+    // Turnstile issues a fresh, single-use token per solve. A widget rendered
+    // with a form-associated input is picked up by name, so this reads
+    // whatever the widget currently holds rather than caching a stale token.
+    var turnstileToken = function(){
+      var el = enquiryForm.querySelector('[name="cf-turnstile-response"]');
+      return el ? el.value : '';
+    };
+    // Resetting after every attempt, success or failure, is what makes the
+    // widget hand out a new token for the next submit - Cloudflare rejects a
+    // reused one, so without this a retry after a failed send would silently
+    // fail Turnstile a second time.
+    var resetTurnstile = function(){
+      if (window.turnstile && typeof window.turnstile.reset === 'function') {
+        window.turnstile.reset();
+      }
+    };
+
     enquiryForm.addEventListener('submit', function(e){
       e.preventDefault();
       var d = {};
       FIELDS.forEach(function(f){ d[f] = enquiryForm[f] ? String(enquiryForm[f].value).trim() : ''; });
+      d.ts = tsField ? tsField.value : '';
+      d['cf-turnstile-response'] = turnstileToken();
 
       if (submitBtn) { submitBtn.disabled = true; }
       say('Sending your enquiry…');
@@ -844,6 +869,7 @@
       }).then(function(res){
         if (res.ok && res.body.ok) {
           enquiryForm.reset();
+          if (tsField) { tsField.value = String(Date.now()); }
           say('Thank you, we’ve got your enquiry and will reply within one to two business days.', 'ok');
         } else {
           throw new Error((res.body && res.body.error) || 'Request failed');
@@ -868,6 +894,7 @@
         }
       }).then(function(){
         if (submitBtn) { submitBtn.disabled = false; }
+        resetTurnstile();
       });
     });
   }

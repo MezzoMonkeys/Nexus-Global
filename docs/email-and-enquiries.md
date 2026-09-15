@@ -31,6 +31,11 @@ tells them to phone, rather than thanking them for a message nobody has seen.
 | `RESEND_WEBHOOK_SECRET` | for delivery tracking | The `whsec_…` signing secret shown when the webhook endpoint is created in Resend. |
 | `ENQUIRY_TO` | no | Comma-separated recipients. Defaults to `keith@lincorholdings.com,tim@lincorholdings.com`, so changing who gets these needs no deploy — just this variable. |
 | `ENQUIRY_FROM` | no | Defaults to `Nexus Global <website@nexusconnecthk.com>`. Must stay on a domain verified in Resend or every send is rejected. |
+| `TURNSTILE_SECRET_KEY` | yes | Cloudflare dashboard → Turnstile → the widget for `nexusconnecthk.com` → Secret Key. **Server-side only.** |
+
+With no `TURNSTILE_SECRET_KEY` the endpoint logs a warning and fails every
+submission's verification (`400`), the same as an actually-failed challenge —
+it never silently accepts what it cannot check.
 
 Set all of them for Production, Preview and Development, then redeploy —
 environment variables are read at invocation, but a running deployment does not
@@ -51,6 +56,32 @@ generation can be pasted into `SUPABASE_SERVICE_ROLE_KEY` without a code change:
 
 Getting this wrong produces a 401 on every insert, which surfaces as enquiries
 that email fine but never appear in the table.
+
+## Bot mitigation
+
+Three layers, checked in this order in `api/enquiry.js`, each silent to a bot
+and — Turnstile aside — invisible to a person:
+
+1. **Honeypot** — a hidden `website` field. Anything in it means the sender is
+   a script; a real browser never renders it, so nothing legitimate ever fills
+   it in. Answered with a plain `200 { ok: true }`, not an error, so a bot
+   testing the endpoint learns nothing about why it failed.
+2. **Timing trap** — `js/main.js` stamps a hidden `ts` field with `Date.now()`
+   when the form becomes interactive; the server drops anything that arrives
+   less than `MIN_FILL_MS` (2.5s) later. Catches scripts that post straight to
+   `/api/enquiry` without ever loading the page's JS, and gets the same silent
+   `200` as the honeypot.
+3. **Cloudflare Turnstile** — the one layer a visitor can see, so a genuine
+   failure (network hiccup, expired token) gets a real `400` and a message
+   inviting a retry, not silence. Needs a widget created in the Cloudflare
+   dashboard for `nexusconnecthk.com`: the **Site Key** goes straight into the
+   `data-sitekey` attribute in `contact.html` (public by design), the
+   **Secret Key** into `TURNSTILE_SECRET_KEY` above and never anywhere in
+   `css/`, `js/`, or HTML.
+
+The first two need no external account and no key. Turnstile is the layer
+worth checking first if bot mail resumes — the honeypot and timing trap only
+stop scripts that skip the form's own JS.
 
 ## Resend setup
 
