@@ -37,6 +37,7 @@
 const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
+const crypto = require('crypto');
 
 const ROOT = __dirname;
 const TARGETS = [
@@ -223,4 +224,128 @@ console.log(
   changed
     ? 'stripped ' + changed + ' file(s): ' + totalBefore + ' -> ' + totalAfter + ' bytes'
     : 'nothing to strip (already clean) -- this run was a no-op'
+);
+
+/**
+ * Conservative minification: trims leading/trailing whitespace off every
+ * line and drops blank lines. Nothing else moves - no renaming, reordering,
+ * or joining two lines into one.
+ *
+ * This is safe because a line boundary is never inside a string: CSS strings
+ * cannot contain a literal unescaped newline, and neither can a JS '...' or
+ * "..." string - only a template literal (backtick string) can, and those
+ * are the one JS construct where leading whitespace on a line is sometimes
+ * meaningful content rather than indentation. main.js and particle-globe.js
+ * contain no template literals - checked by hand, and re-checked below by a
+ * guard that fails the build loudly rather than silently mangling one if a
+ * future edit ever introduces one. That guard runs after the comment-strip
+ * step above, so a backtick used only in a comment (there are several,
+ * inside prose like "the `a` variable") never trips it.
+ *
+ * Deliberately not a real minifier - see the header comment above for why
+ * that trade was already made once for this project. This just picks up the
+ * bulk of what's left (indentation and blank lines are most of it) for
+ * close to zero additional risk.
+ */
+function minifyLines(src) {
+  return src
+    .split('\n')
+    .map(function (line) { return line.replace(/^[ \t]+/, '').replace(/[ \t]+$/, ''); })
+    .filter(function (line) { return line.length > 0; })
+    .join('\n');
+}
+
+let minBefore = 0, minAfter = 0;
+for (const { file, kind } of TARGETS) {
+  const p = path.join(ROOT, file);
+  const src = fs.readFileSync(p, 'utf8');
+
+  if (kind === 'js' && src.indexOf('`') !== -1) {
+    throw new Error(
+      file + ': contains a backtick (template literal?) - the line-trim ' +
+      'minifier below assumes there are none in this file. Investigate ' +
+      'before letting this run, since it can silently eat meaningful ' +
+      'whitespace inside a template literal.'
+    );
+  }
+
+  const out = minifyLines(src);
+  if (!out.trim()) throw new Error(file + ': minified to nothing');
+  if (out.length > src.length) throw new Error(file + ': minify grew the file');
+  for (const token of CANARIES[file]) {
+    if (!out.includes(token)) throw new Error(file + ' (minify): lost "' + token + '"');
+  }
+  if (kind === 'css' && !bracesBalanced(out)) throw new Error(file + ' (minify): unbalanced braces');
+  if (kind === 'js') {
+    try { new vm.Script(out, { filename: file }); }
+    catch (e) { throw new Error(file + ' (minify): no longer parses -- ' + e.message); }
+  }
+
+  fs.writeFileSync(p, out);
+  minBefore += src.length; minAfter += out.length;
+}
+console.log('minified (whitespace only): ' + minBefore + ' -> ' + minAfter + ' bytes');
+
+/**
+ * Cache-busting via a content hash on the query string, not the filename.
+ *
+ * styles.css, fonts.css, main.js and particle-globe.js are the only static
+ * assets on this site still capped at Cache-Control: max-age=3600 (see
+ * vercel.json) - everything else (fonts, images, video, js/vendor) already
+ * gets a year, immutable, because its filename either never changes or
+ * carries its own version (three-custom-0.128.0.min.js). These four can't
+ * safely get the same treatment at their current, unversioned filenames: an
+ * immutable year-long cache on a name that gets silently overwritten next
+ * deploy would mean a returning visitor never sees the update.
+ *
+ * Renaming the files was the other option and was rejected: it would touch
+ * every HTML reference AND require a matching filename-pattern header rule
+ * in vercel.json. A query-string version does the same job - a new hash is
+ * a new URL, so the old cached response is simply never asked for again -
+ * without renaming anything. vercel.json matches Cache-Control by path, not
+ * query string, so the immutable rule below applies regardless of `?v=`.
+ */
+const ASSET_TARGETS = TARGETS.map(t => ({ file: t.file, ref: '/' + t.file }));
+const HTML_FILES = ['index.html', 'about.html', 'network.html', 'contact.html', 'privacy.html', '404.html'];
+
+const hashes = {};
+for (const { file } of ASSET_TARGETS) {
+  const buf = fs.readFileSync(path.join(ROOT, file));
+  hashes[file] = crypto.createHash('sha256').update(buf).digest('hex').slice(0, 10);
+}
+
+const replacedCount = {};
+for (const { file } of ASSET_TARGETS) replacedCount[file] = 0;
+
+let htmlChanged = 0;
+for (const htmlFile of HTML_FILES) {
+  const p = path.join(ROOT, htmlFile);
+  if (!fs.existsSync(p)) throw new Error('expected HTML file missing: ' + htmlFile);
+  let html = fs.readFileSync(p, 'utf8');
+  let changed = false;
+  for (const { file, ref } of ASSET_TARGETS) {
+    const needle = '"' + ref + '"';
+    const versioned = '"' + ref + '?v=' + hashes[file] + '"';
+    if (html.includes(needle)) {
+      html = html.split(needle).join(versioned);
+      replacedCount[file]++;
+      changed = true;
+    }
+  }
+  if (changed) { fs.writeFileSync(p, html); htmlChanged++; }
+}
+
+// particle-globe.js is homepage-only by design; the other three are sitewide.
+// A target with zero replacements anywhere means its reference path drifted
+// out of sync with this list, and the fingerprint would silently do nothing.
+for (const { file } of ASSET_TARGETS) {
+  if (replacedCount[file] === 0) {
+    throw new Error('fingerprint: "' + file + '" was never referenced by any HTML file - path mismatch?');
+  }
+}
+
+console.log(
+  'fingerprinted ' + ASSET_TARGETS.length + ' asset(s), rewrote references in ' +
+  htmlChanged + '/' + HTML_FILES.length + ' HTML file(s): ' +
+  ASSET_TARGETS.map(t => t.file + '#' + hashes[t.file]).join(', ')
 );
