@@ -870,7 +870,7 @@
         if (res.ok && res.body.ok) {
           enquiryForm.reset();
           if (tsField) { tsField.value = String(Date.now()); }
-          say('Thank you, we’ve got your enquiry and will reply within one to two business days.', 'ok');
+          say('Thank you, we’ve got your enquiry and will respond as soon as possible.', 'ok');
         } else {
           throw new Error((res.body && res.body.error) || 'Request failed');
         }
