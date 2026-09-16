@@ -83,6 +83,11 @@ The first two need no external account and no key. Turnstile is the layer
 worth checking first if bot mail resumes — the honeypot and timing trap only
 stop scripts that skip the form's own JS.
 
+A fourth layer, IP-based rate limiting via Upstash Redis, was considered and
+deliberately left out — the free tier only allows one database and that one
+is already committed elsewhere. Turnstile is doing the real work here; add
+rate limiting later if a bot ever turns up that solves it repeatedly.
+
 ## Resend setup
 
 - **Domain:** `nexusconnecthk.com`, verified. SPF and DKIM records must stay in
