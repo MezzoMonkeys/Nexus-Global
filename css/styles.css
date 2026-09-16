@@ -1306,29 +1306,6 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
 .page--dark .statement__sub{color:var(--plat-70)}
 .statement__actions{margin-top:36px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
 
-/* Partner logo marquee, #contact-cta only. Positioned against .page's own
-   relative box exactly the way .image-panel reaches full-section-bleed
-   elsewhere, so it runs the section's full width regardless of .page's
-   own side padding, and sits flush with the section's true bottom edge
-   regardless of .page's bottom padding. #contact-cta's own padding-bottom
-   is enlarged below so this band has room to sit below the centred CTA
-   text without the two ever overlapping. */
-#contact-cta{padding-bottom:210px}
-.logo-marquee{position:absolute;left:0;right:0;bottom:0;z-index:2;overflow:hidden;padding:26px 0;border-top:1px solid var(--plat-18)}
-/* Two identical .logo-marquee__set runs back to back in one flex track.
-   Animating exactly -50% of the track's own width loops seamlessly: the
-   second set is already sitting where the first one started, so there is
-   no visible jump or reset. */
-.logo-marquee__track{display:flex;width:max-content;gap:clamp(40px,6vw,72px);animation:logoMarquee 34s linear infinite}
-.logo-marquee:hover .logo-marquee__track,.logo-marquee:focus-within .logo-marquee__track{animation-play-state:paused}
-.logo-marquee__set{display:flex;align-items:center;gap:clamp(40px,6vw,72px)}
-.logo-marquee__item{flex:none;display:flex;align-items:center;height:34px}
-.logo-marquee__item img{height:100%;width:auto;display:block;opacity:.8;transition:opacity .25s var(--ease)}
-.logo-marquee__item:hover img{opacity:1}
-@keyframes logoMarquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-@media(prefers-reduced-motion:reduce){.logo-marquee__track{animation:none}}
-@media(max-width:640px){#contact-cta{padding-bottom:150px}.logo-marquee{padding:18px 0}.logo-marquee__item{height:24px}}
-
 /* Advantage pills (section 3): a green-bordered capsule labelling each column,
    with its supporting copy beneath. */
 .advantage-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:30px;margin-top:36px}
