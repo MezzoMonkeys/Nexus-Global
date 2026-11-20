@@ -1568,3 +1568,30 @@ h3,h4{margin:0;font-family:var(--font-body);font-weight:600;letter-spacing:-0.01
 @media(max-width:1080px){.nav__links{display:none}.nav__menu-btn{display:inline-flex}}
 
 @media print{.nav,.nav__menu{display:none}}
+
+/* ===== Cookie consent banner =====
+   Built by js/consent.js. Bottom-left so it never covers .back-to-top
+   (bottom-right) on desktop, and not modal: the page stays usable, and nothing
+   that needs consent runs until "Accept" is clicked. Accept and Decline are the
+   same size and weight on purpose - the ICO treats a buried "reject" as
+   invalid consent. Pine card + platinum text matches the footer it sits over. */
+.consent{position:fixed;left:16px;bottom:16px;z-index:60;width:380px;max-width:calc(100vw - 32px);background:var(--pine);color:var(--platinum);border:1px solid var(--plat-12);border-radius:22px;padding:22px 22px 20px;box-shadow:0 18px 50px rgba(0,0,0,.28),0 2px 10px rgba(0,0,0,.18);font-family:var(--font-body);animation:consent-in .5s var(--ease-entrance)}
+.consent[hidden]{display:none}
+.consent__title{margin:0 0 8px;font-family:var(--font-label);font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--accent-light)}
+.consent__text{margin:0 0 16px;font-size:14px;line-height:1.55;color:var(--plat-85)}
+.consent__text a{color:var(--platinum);text-decoration:underline;text-underline-offset:3px}
+.consent__status{margin:-6px 0 16px;font-size:13px;color:var(--plat-70)}
+.consent__status[hidden]{display:none}
+.consent__actions{display:flex;gap:10px}
+.consent__btn{flex:1 1 0}
+.consent__btn--decline{background:transparent;color:var(--platinum);border-color:var(--plat-40)}
+.consent__btn:focus-visible,.consent__text a:focus-visible{outline:2px solid var(--accent-light);outline-offset:3px}
+@keyframes consent-in{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.consent{animation:none}}
+/* Footer "Cookie settings" - a button, since it opens UI rather than going
+   anywhere, styled to match the Privacy Policy link beside it. */
+.footer__cookie-btn{background:none;border:0;padding:0;font:inherit;letter-spacing:inherit;text-transform:inherit;color:inherit;text-decoration:underline;text-underline-offset:2px;cursor:pointer}
+.footer__cookie-btn:focus-visible{outline:2px solid var(--accent-light);outline-offset:3px}
+/* Privacy page section anchors (/privacy#cookies, linked from the banner):
+   clear the fixed nav so the heading isn't hidden under it on arrival. */
+#policy [id]{scroll-margin-top:calc(var(--nav-h) + 40px)}
